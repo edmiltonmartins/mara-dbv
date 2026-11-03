@@ -1,0 +1,67 @@
+name: CI/CD Mara — IA dos Desbravadores
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: 🧪 Testes Automatizados (RAG & Persistência)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Instalar Dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Executar Suíte de Testes (pytest)
+        run: |
+          pytest -v
+
+  deploy:
+    name: 🚀 Deploy Automático na VPS (mara.infinitosoft.com)
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Atualizar Mara na VPS via SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER || 'ubuntu' }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY || secrets.SSH_KEY || secrets.PRIVATE_KEY }}
+        run: |
+          if [ -z "$SSH_KEY" ]; then
+            echo "ℹ️ Secret SSH_PRIVATE_KEY ainda não configurado neste repositório; pulando etapa SSH."
+            exit 0
+          fi
+
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" << 'EOF'
+            set -e
+            mkdir -p /home/ubuntu/projetos-infinito
+            cd /home/ubuntu/projetos-infinito
+            if [ -d "mara-dbv/.git" ]; then
+              cd mara-dbv
+              git fetch origin main
+              git reset --hard origin/main
+              cd ..
+            fi
+            cd deploy
+            sudo docker compose up -d --build mara-app gateway
+          EOF

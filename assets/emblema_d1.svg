@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 250" width="240" height="250">
+  <!-- Triângulo Oficial D1 (Pantone 1795 C #FF1300 e Pantone 116 C #FFD600) -->
+  <polygon points="10,10 230,10 230,45 120,240 10,45" fill="#FF1300"/>
+  <polygon points="18,18 222,18 222,44 120,225 18,44" fill="none" stroke="#FFD600" stroke-width="7" stroke-linejoin="miter"/>
+  <line x1="18" y1="50" x2="222" y2="50" stroke="#FFD600" stroke-width="7"/>
+
+  <!-- Texto Superior DESBRAVADORES -->
+  <text x="120" y="42" font-family="Impact, Arial Black, sans-serif" font-size="25" font-weight="900"
+        fill="#FFD600" text-anchor="middle" letter-spacing="0.8">DESBRAVADORES</text>
+
+  <!-- Escudo Branco com Borda Amarelo-Ouro e Filete Vermelho -->
+  <path d="M 60 66 Q 90 74 120 64 Q 150 74 180 66 C 176 112 156 138 120 162 C 84 138 64 112 60 66 Z"
+        fill="#FF1300" stroke="#FFD600" stroke-width="6"/>
+  <path d="M 70 74 Q 95 81 120 72 Q 145 81 170 74 C 166 110 150 132 120 151 C 90 132 74 110 70 74 Z"
+        fill="#FFFFFF"/>
+
+  <!-- Espada Azul Marinho (Pantone 2758 C #0B1867) inclinada da esquerda-inferior para direita-superior -->
+  <g transform="rotate(-22 120 112)">
+    <!-- Lâmina -->
+    <polygon points="82,107 188,112 82,117" fill="#0B1867"/>
+    <!-- Guarda (Cruzeta) -->
+    <polygon points="78,84 88,88 85,136 78,140 74,132 77,92" fill="#0B1867"/>
+    <!-- Punho e Pomo -->
+    <rect x="56" y="106" width="22" height="12" fill="#0B1867"/>
+    <rect x="50" y="101" width="8" height="22" rx="2" fill="#0B1867"/>
+  </g>
+
+  <!-- Texto CLUBE abaixo do escudo -->
+  <text x="120" y="185" font-family="Impact, Arial Black, sans-serif" font-size="22" font-weight="900"
+        fill="#FFD600" text-anchor="middle" letter-spacing="0.8">CLUBE</text>
+</svg>
