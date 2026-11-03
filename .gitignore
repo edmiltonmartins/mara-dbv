@@ -1,0 +1,31 @@
+# Credenciais e variáveis de ambiente (NUNCA COMITAR)
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Ambiente virtual e caches Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Banco SQLite local de execução (os manuais .md em data/manuais/ são versionados)
+data/*.sqlite
+data/*.sqlite-journal
+data/*.db
+
+# Arquivos pesados de editoração gráfica (mantém apenas PNG/JPG/SVG web)
+*.cdr
+*.ai
+*.eps
+
+# Arquivos temporários e de sistema
+.DS_Store
+._*
+Thumbs.db
+*.log
