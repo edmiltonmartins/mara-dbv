@@ -2,14 +2,14 @@ name: CI/CD Mara — IA dos Desbravadores
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, release, 'release/**' ]
   pull_request:
     branches: [ main, develop ]
   workflow_dispatch:
 
 jobs:
   test:
-    name: 🧪 Testes Automatizados (RAG & Persistência)
+    name: 🧪 Testes Automatizados
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do Código
@@ -26,7 +26,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Executar Suíte de Testes (pytest)
+      - name: Executar Suíte de Testes (API & Lógica)
         run: |
           pytest -v
 
@@ -36,15 +36,19 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Atualizar Mara na VPS via SSH
+      - name: Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: Executar Deploy via SSH Nativo
         env:
           SSH_HOST: ${{ secrets.SSH_HOST || '163.176.114.143' }}
           SSH_USER: ${{ secrets.SSH_USER || 'ubuntu' }}
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY || secrets.SSH_KEY || secrets.PRIVATE_KEY }}
         run: |
           if [ -z "$SSH_KEY" ]; then
-            echo "ℹ️ Secret SSH_PRIVATE_KEY ainda não configurado neste repositório; pulando etapa SSH."
-            exit 0
+            echo "❌ Erro: O secret SSH_PRIVATE_KEY não foi configurado no GitHub!"
+            echo "Vá em Settings > Secrets and variables > Actions e adicione SSH_PRIVATE_KEY"
+            exit 1
           fi
 
           mkdir -p ~/.ssh
@@ -52,16 +56,24 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
 
+          echo "📦 Empacotando release da Mara (preservando .env e banco SQLite da VPS)..."
+          tar -czf /tmp/mara-release.tar.gz --exclude='.git' --exclude='data/*.sqlite' --exclude='.env' .
+          scp -i ~/.ssh/id_rsa /tmp/mara-release.tar.gz "$SSH_USER@$SSH_HOST:/tmp/mara-release.tar.gz"
+
+          echo "🚀 Conectando em $SSH_USER@$SSH_HOST..."
           ssh -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" << 'EOF'
             set -e
-            mkdir -p /home/ubuntu/projetos-infinito
-            cd /home/ubuntu/projetos-infinito
-            if [ -d "mara-dbv/.git" ]; then
-              cd mara-dbv
-              git fetch origin main
-              git reset --hard origin/main
-              cd ..
-            fi
-            cd deploy
-            sudo docker compose up -d --build mara-app gateway
+            echo "--- Atualizando arquivos em /home/ubuntu/projetos-infinito/mara-dbv ---"
+            mkdir -p /home/ubuntu/projetos-infinito/mara-dbv
+            tar -xzf /tmp/mara-release.tar.gz -C /home/ubuntu/projetos-infinito/mara-dbv
+            rm -f /tmp/mara-release.tar.gz
+
+            echo "--- Atualizando container mara-app ---"
+            cd /home/ubuntu/projetos-infinito/deploy
+            sudo docker compose up -d --build mara-app
+            sudo docker compose restart gateway
+
+            echo "--- Status dos serviços ---"
+            sudo docker ps
           EOF
+          echo "✅ Deploy concluído com sucesso!"
