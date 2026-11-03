@@ -103,35 +103,274 @@ st.set_page_config(
     page_title="Mara — IA dos Desbravadores",
     page_icon=AVATAR_DBV,
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
+)
+
+if "sidebar_recolhida" not in st.session_state:
+    st.session_state.sidebar_recolhida = False
+
+_rail_recolhido = bool(st.session_state.sidebar_recolhida)
+_largura_sidebar = "68px" if _rail_recolhido else "300px"
+_padding_sidebar = "0.75rem 0 1.25rem 0" if _rail_recolhido else "0.85rem 0.85rem 1.5rem 0.85rem"
+
+_css_botoes_sidebar = (
+    """
+    /* Modo Recolhido (Rail de Ícones 68px estilo Gemini) */
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+        gap: 0.45rem !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    section[data-testid="stSidebar"] .stElementContainer,
+    section[data-testid="stSidebar"] .stButton,
+    section[data-testid="stSidebar"] [data-testid="stTooltipIcon"],
+    section[data-testid="stSidebar"] [data-testid="stTooltipHoverTarget"] {
+        width: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        height: 44px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    section[data-testid="stSidebar"] .stButton button {
+        width: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #FFFFFF !important;
+        color: #1E293B !important;
+        border: 1px solid #E2E8F0 !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+        overflow: hidden !important;
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+    }
+    section[data-testid="stSidebar"] .stButton button div,
+    section[data-testid="stSidebar"] .stButton button [data-testid="stMarkdownContainer"],
+    section[data-testid="stSidebar"] .stButton button p,
+    section[data-testid="stSidebar"] .stButton button span {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 1.15rem !important;
+        line-height: 1 !important;
+        text-align: center !important;
+    }
+    section[data-testid="stSidebar"] .stButton button:hover {
+        background: #EFF6FF !important;
+        color: #0047AB !important;
+        border-color: #93C5FD !important;
+    }
+    section[data-testid="stSidebar"] .stButton button[kind="primary"] {
+        background: #0047AB !important;
+        color: #FFFFFF !important;
+        border: 1px solid #0047AB !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 6px rgba(0, 71, 171, 0.22) !important;
+    }
+    section[data-testid="stSidebar"] .stButton button[kind="primary"] p,
+    section[data-testid="stSidebar"] .stButton button[kind="primary"] span {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+    section[data-testid="stSidebar"] .stButton button[kind="primary"]:hover {
+        background: #003380 !important;
+        border-color: #003380 !important;
+    }
+    """
+    if _rail_recolhido
+    else """
+    /* Modo Expandido (Gaveta Completa 300px estilo Gemini) */
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+        gap: 0.45rem !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
+        gap: 0.35rem !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stColumn"] {
+        min-width: 0 !important;
+    }
+    section[data-testid="stSidebar"] .stButton,
+    section[data-testid="stSidebar"] [data-testid="stTooltipIcon"],
+    section[data-testid="stSidebar"] [data-testid="stTooltipHoverTarget"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+    }
+    section[data-testid="stSidebar"] .stButton button {
+        width: 100% !important;
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        height: 2.45rem !important;
+        min-height: 2.45rem !important;
+        padding: 0 0.8rem !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        overflow: hidden !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+    }
+    section[data-testid="stSidebar"] .stButton button > div,
+    section[data-testid="stSidebar"] .stButton button [data-testid="stMarkdownContainer"] {
+        display: flex !important;
+        align-items: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    section[data-testid="stSidebar"] .stButton button p {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 0.84rem !important;
+        text-align: left !important;
+        width: 100% !important;
+    }
+    section[data-testid="stSidebar"] .stButton button:hover {
+        border-color: #0047AB !important;
+        color: #0047AB !important;
+        background: #F8FAFC !important;
+    }
+    /* Botão hambúrguer (☰) isolado por key no topo esquerdo */
+    section[data-testid="stSidebar"] .st-key-btn_rail_recolher .stButton,
+    section[data-testid="stSidebar"] .st-key-btn_rail_recolher [data-testid="stTooltipIcon"],
+    section[data-testid="stSidebar"] .st-key-btn_rail_recolher [data-testid="stTooltipHoverTarget"],
+    section[data-testid="stSidebar"] .st-key-btn_rail_recolher .stButton button {
+        justify-content: center !important;
+        padding: 0 !important;
+        width: 38px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        border-radius: 10px !important;
+    }
+    section[data-testid="stSidebar"] .st-key-btn_rail_recolher .stButton button {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+    }
+    section[data-testid="stSidebar"] .st-key-btn_rail_recolher .stButton button div,
+    section[data-testid="stSidebar"] .st-key-btn_rail_recolher .stButton button p {
+        justify-content: center !important;
+        font-size: 1.1rem !important;
+        text-align: center !important;
+        width: 100% !important;
+        line-height: 1 !important;
+    }
+    section[data-testid="stSidebar"] .st-key-btn_rail_recolher .stButton button:hover {
+        background: #EFF6FF !important;
+        border-color: #93C5FD !important;
+        color: #0047AB !important;
+    }
+    /* Botões de conversas recentes salvas (open_*) */
+    section[data-testid="stSidebar"] [class*="st-key-open_"] .stButton button {
+        height: 2.3rem !important;
+        min-height: 2.3rem !important;
+        padding: 0 0.65rem !important;
+        font-weight: 500 !important;
+        border-color: #E2E8F0 !important;
+        border-radius: 9px !important;
+    }
+    section[data-testid="stSidebar"] [class*="st-key-open_"] .stButton button:hover {
+        background: #EFF6FF !important;
+        border-color: #93C5FD !important;
+        color: #0047AB !important;
+    }
+    /* Botão de excluir conversa (del_conv_*) */
+    section[data-testid="stSidebar"] [class*="st-key-del_conv_"] .stButton,
+    section[data-testid="stSidebar"] [class*="st-key-del_conv_"] [data-testid="stTooltipIcon"],
+    section[data-testid="stSidebar"] [class*="st-key-del_conv_"] [data-testid="stTooltipHoverTarget"],
+    section[data-testid="stSidebar"] [class*="st-key-del_conv_"] .stButton button {
+        width: 34px !important;
+        min-width: 34px !important;
+        max-width: 34px !important;
+        height: 2.3rem !important;
+        min-height: 2.3rem !important;
+        justify-content: center !important;
+        padding: 0 !important;
+    }
+    section[data-testid="stSidebar"] [class*="st-key-del_conv_"] .stButton button {
+        color: #64748B !important;
+        border: 1px solid transparent !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    section[data-testid="stSidebar"] [class*="st-key-del_conv_"] .stButton button div,
+    section[data-testid="stSidebar"] [class*="st-key-del_conv_"] .stButton button p {
+        justify-content: center !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+    section[data-testid="stSidebar"] [class*="st-key-del_conv_"] .stButton button:hover {
+        color: #DC2626 !important;
+        background: #FEE2E2 !important;
+        border-color: #FCA5A5 !important;
+    }
+    """
 )
 
 # ==================== CSS MINIMALISTA ESTILO GEMINI ====================
 render_html(
-    """
+    f"""
     <style>
-    :root {
+    :root {{
         --dbv-azul: #0047AB;
         --dbv-petroleo: #005C8A;
         --dbv-ouro: #FFD600;
         --dbv-vermelho: #FF1300;
-    }
+    }}
 
     /* Fundo clean claro estilo Gemini */
-    .stApp {
+    .stApp {{
         background-color: #F8FAFC;
         cursor: default;
         caret-color: transparent;
-    }
+    }}
 
-    /* Formato geral amplo para evitar quebras de linha indesejadas */
-    div.stMainBlockContainer {
+    /* Formato geral amplo sem corte no topo */
+    div.stMainBlockContainer {{
         max-width: 1140px !important;
-        padding-top: 1.5rem !important;
+        padding-top: 1.25rem !important;
         padding-bottom: 6.5rem !important;
-    }
+    }}
 
-    /* Oculta o ícone de âncora/link ("anexo") e o rodapé/badge "Made with Streamlit" */
+    /* Oculta a barra superior vazia do Streamlit, botões nativos de colapso e badges */
+    header[data-testid="stHeader"],
+    [data-testid="stHeader"],
+    [data-testid="stToolbar"],
+    [data-testid="stSidebarHeader"],
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="collapsedControl"],
+    [data-testid="stExpandSidebarButton"],
     [data-testid="stHeaderActionElements"],
     .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a,
     .stMarkdown h4 a, .stMarkdown h5 a, .stMarkdown h6 a,
@@ -140,95 +379,102 @@ render_html(
     [data-testid="stDecoration"],
     .stDeployButton,
     [class*="viewerBadge"],
-    [id*="MainMenu"] {
+    [id*="MainMenu"] {{
         display: none !important;
         visibility: hidden !important;
         height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
         pointer-events: none !important;
-    }
+    }}
 
     /* Sem barra vertical de texto em elementos não-editáveis */
     .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
     .stApp p, .stApp span, .stApp label, .stApp div,
-    div[data-testid="stMetric"], div[data-testid="stCaptionContainer"] {
+    div[data-testid="stMetric"], div[data-testid="stCaptionContainer"] {{
         cursor: default;
         caret-color: transparent;
-    }
+    }}
     .gemini-welcome, .dbv-topbar, .lib-card-header, section[data-testid="stSidebar"],
-    button, [role="tab"], summary {
+    button, [role="tab"], summary {{
         user-select: none !important;
         -webkit-user-select: none !important;
-    }
+    }}
     div[data-baseweb="select"],
     div[data-baseweb="select"] *,
-    div[data-baseweb="select"] input {
+    div[data-baseweb="select"] input {{
         cursor: pointer !important;
         caret-color: transparent !important;
         user-select: none !important;
-    }
+    }}
     button, button *, [role="button"], [role="button"] *,
     [role="tab"], [role="tab"] *, [role="radio"], [role="radio"] *,
     label[data-baseweb="radio"], label[data-baseweb="radio"] *,
-    summary, summary * {
+    summary, summary * {{
         cursor: pointer !important;
         caret-color: transparent !important;
-    }
+    }}
     input[type="text"]:not([readonly]),
     input[type="password"]:not([readonly]),
     input[type="search"]:not([readonly]),
     input[type="number"]:not([readonly]),
     textarea,
-    div[data-testid="stChatInput"] textarea {
+    div[data-testid="stChatInput"] textarea {{
         cursor: text !important;
         caret-color: #0047AB !important;
         user-select: text !important;
         -webkit-user-select: text !important;
-    }
+    }}
 
     /* Barra superior discreta quando já há conversa */
-    .dbv-topbar {
+    .dbv-topbar {{
         display: flex;
-        align-items: center;
+        align-items: safe center;
         justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
         padding: 0.4rem 0 0.85rem 0;
         margin-bottom: 1rem;
         border-bottom: 1px solid #E2E8F0;
-    }
-    .dbv-topbar-left {
+    }}
+    .dbv-topbar-left {{
         display: flex;
         align-items: center;
         gap: 10px;
-    }
-    .dbv-topbar-left img {
+    }}
+    .dbv-topbar-left img {{
+        display: block;
         width: 28px;
         height: auto;
-    }
-    .dbv-topbar-title {
+    }}
+    .dbv-topbar-title {{
         font-weight: 800;
         font-size: 1.05rem;
         color: #0F172A;
-    }
-    .dbv-topbar-badge {
+    }}
+    .dbv-topbar-badge {{
         font-size: 0.76rem;
         font-weight: 600;
         color: #005C8A;
         background: #E0F2FE;
         padding: 3px 11px;
         border-radius: 999px;
-    }
+    }}
 
     /* Tela Inicial Minimalista Estilo Gemini (centralizada verticalmente) */
-    .gemini-welcome {
+    .gemini-welcome {{
         text-align: center;
-        padding: 11vh 1rem 1.2rem 1rem;
-    }
-    .gemini-welcome img {
+        padding: 10vh 1rem 1.2rem 1rem;
+    }}
+    .gemini-welcome img {{
+        display: block;
         width: 64px;
         height: auto;
-        margin-bottom: 0.9rem;
+        margin: 0 auto 0.9rem auto;
         filter: drop-shadow(0 4px 10px rgba(0, 71, 171, 0.18));
-    }
-    .gemini-greeting {
+    }}
+    .gemini-greeting {{
         font-size: 2.2rem;
         font-weight: 800;
         line-height: 1.25;
@@ -236,17 +482,17 @@ render_html(
         background: linear-gradient(90deg, #0047AB 0%, #005C8A 55%, #D90416 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-    }
-    .gemini-sub {
+    }}
+    .gemini-sub {{
         font-size: 1.04rem;
         color: #64748B;
         margin: 0 auto;
         max-width: 100%;
         font-weight: 400;
-    }
+    }}
 
     /* Chips de sugestão limpos estilo Gemini */
-    div.stMainBlockContainer .stButton > button {
+    div.stMainBlockContainer .stButton > button {{
         background: #FFFFFF !important;
         color: #1E293B !important;
         border: 1px solid #E2E8F0 !important;
@@ -258,76 +504,95 @@ render_html(
         text-align: left !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
         transition: all 0.16s ease !important;
-    }
-    div.stMainBlockContainer .stButton > button:hover {
+    }}
+    div.stMainBlockContainer .stButton > button:hover {{
         background: #F1F5F9 !important;
         border-color: #0047AB !important;
         color: #0047AB !important;
         transform: translateY(-1px);
         box-shadow: 0 4px 10px rgba(0, 71, 171, 0.08) !important;
-    }
+    }}
 
     /* Barra inferior do Chat (stBottom) estilo seletor de modelo/modo do Gemini */
-    div[data-testid="stBottom"] > div {
+    div[data-testid="stBottom"] > div {{
         background: linear-gradient(180deg, rgba(248,250,252,0) 0%, #F8FAFC 28%, #F8FAFC 100%) !important;
         padding-bottom: 1.8rem !important;
-    }
+    }}
 
-    /* Barra Lateral Sutil */
-    section[data-testid="stSidebar"] {
+    /* Barra Lateral Estilo Gemini (Alterna entre Rail de Ícones 68px e Menu 300px) */
+    section[data-testid="stSidebar"],
+    section[data-testid="stSidebar"][aria-expanded="false"],
+    section[data-testid="stSidebar"][aria-expanded="true"] {{
+        transform: none !important;
+        margin-left: 0 !important;
+        margin-inline-start: 0 !important;
+        left: 0 !important;
+        width: {_largura_sidebar} !important;
+        min-width: {_largura_sidebar} !important;
+        max-width: {_largura_sidebar} !important;
+        visibility: visible !important;
+        display: block !important;
         background-color: #F1F5F9 !important;
         border-right: 1px solid #E2E8F0 !important;
-    }
-    section[data-testid="stSidebar"] .stButton > button {
-        background: #FFFFFF !important;
-        color: #0F172A !important;
-        border: 1px solid #CBD5E1 !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        font-size: 0.84rem !important;
-        height: 2.4rem !important;
-        min-height: 2.4rem !important;
-        padding: 0 0.75rem !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        overflow: hidden !important;
-    }
-    section[data-testid="stSidebar"] .stButton > button p {
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        margin: 0 !important;
-        font-size: 0.84rem !important;
-    }
-    section[data-testid="stSidebar"] .stButton > button:hover {
-        border-color: #0047AB !important;
-        color: #0047AB !important;
-        background: #F8FAFC !important;
-    }
-    /* Botão de excluir conversa (segunda coluna da lista de recentes) */
-    section[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] > div:nth-child(2) .stButton > button {
-        justify-content: center !important;
+        box-sizing: border-box !important;
+        transition: width 0.16s ease, min-width 0.16s ease, max-width 0.16s ease !important;
+    }}
+    section[data-testid="stSidebarResizeHandle"] {{
+        display: none !important;
+    }}
+    section[data-testid="stSidebar"] > div:first-child,
+    section[data-testid="stSidebar"] [data-testid="stSidebarContent"] {{
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
         padding: 0 !important;
-        color: #64748B !important;
-        border-color: transparent !important;
-        background: transparent !important;
-        box-shadow: none !important;
-    }
-    section[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] > div:nth-child(2) .stButton > button:hover {
-        color: #DC2626 !important;
-        background: #FEE2E2 !important;
-        border-color: #FCA5A5 !important;
-    }
-    .sidebar-section-label {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        padding-inline: 0 !important;
+        margin: 0 !important;
+        scrollbar-gutter: auto !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain;
+    }}
+    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"],
+    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] {{
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }}
+    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {{
+        padding: {_padding_sidebar} !important;
+    }}
+    iframe[height="0"],
+    div.stElementContainer:has(> iframe[height="0"]) {{
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+
+    {_css_botoes_sidebar}
+
+    .sidebar-section-label {{
         font-size: 0.73rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
         color: #64748B;
         margin: 0.9rem 0 0.35rem 0.2rem;
-    }
+    }}
+    </style>
+    """
+)
 
+render_html(
+    """
+    <style>
     /* Cards da página Biblioteca */
     .lib-card {
         background: #FFFFFF;
@@ -504,41 +769,57 @@ render_html(
 
 
 # ==================== IDENTIFICAÇÃO ANÔNIMA DO NAVEGADOR (SEM LOGIN) ====================
-def obter_device_id_navegador() -> str:
+def obter_device_id_navegador(repo_ref=None) -> str:
     """Obtém ou cria um ID único persistente no cookie do navegador sem exigir login."""
     cookies = getattr(st.context, "cookies", {}) or {}
     cookie_id = cookies.get("dbv_device_id")
 
     if cookie_id and len(str(cookie_id)) >= 8:
         st.session_state.device_id = str(cookie_id)
-        return str(cookie_id)
-
-    if "device_id" not in st.session_state or not st.session_state.device_id:
-        st.session_state.device_id = f"dbv_{uuid.uuid4().hex[:12]}"
+    elif "device_id" not in st.session_state or not st.session_state.device_id:
+        id_recuperado = None
+        if repo_ref is not None and hasattr(repo_ref, "obter_device_id_mais_recente"):
+            try:
+                id_recuperado = repo_ref.obter_device_id_mais_recente()
+            except Exception:
+                id_recuperado = None
+        st.session_state.device_id = id_recuperado or f"dbv_{uuid.uuid4().hex[:12]}"
 
     dev_id = st.session_state.device_id
-    # Grava cookie para persistir por 1 ano neste navegador e remove qualquer badge "Made with Streamlit"
-    components.html(
-        f"""
-        <script>
-        try {{
-            document.cookie = "dbv_device_id={dev_id}; path=/; max-age=31536000; SameSite=Lax";
-            localStorage.setItem("dbv_device_id", "{dev_id}");
-            const ocultarBadges = () => {{
-                const doc = window.parent.document;
-                doc.querySelectorAll('footer, [data-testid="stFooter"], [class*="viewerBadge"]').forEach(el => {{
-                    el.style.display = 'none';
+    if not st.session_state.get("_boot_js_executado"):
+        st.session_state._boot_js_executado = True
+        components.html(
+            f"""
+            <script>
+            try {{
+                const pWin = window.parent;
+                const doc = pWin.document;
+                pWin.localStorage.setItem("dbv_device_id", "{dev_id}");
+                doc.cookie = "dbv_device_id={dev_id}; path=/; max-age=31536000; SameSite=Lax";
+                Object.keys(pWin.localStorage || {{}}).forEach(k => {{
+                    if (k.toLowerCase().includes("sidebar")) {{
+                        pWin.localStorage.removeItem(k);
+                    }}
                 }});
-            }};
-            ocultarBadges();
-            setTimeout(ocultarBadges, 500);
-            setTimeout(ocultarBadges, 1500);
-        }} catch (e) {{}}
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
+                const ajustarInterface = () => {{
+                    doc.querySelectorAll('footer, [data-testid="stFooter"], [class*="viewerBadge"]').forEach(el => {{
+                        el.style.display = 'none';
+                    }});
+                    const sb = doc.querySelector('section[data-testid="stSidebar"]');
+                    if (sb && sb.getAttribute('aria-expanded') === 'false') {{
+                        const btnExp = doc.querySelector('[data-testid="stExpandSidebarButton"], [data-testid="collapsedControl"] button, [data-testid="collapsedControl"]');
+                        if (btnExp) btnExp.click();
+                    }}
+                }};
+                ajustarInterface();
+                setTimeout(ajustarInterface, 300);
+                setTimeout(ajustarInterface, 900);
+            }} catch (e) {{}}
+            </script>
+            """,
+            height=0,
+            width=0,
+        )
     return dev_id
 
 
@@ -564,8 +845,6 @@ if "categoria_ativa" not in st.session_state:
     st.session_state.categoria_ativa = "TODAS"
 if "admin_autenticado" not in st.session_state:
     st.session_state.admin_autenticado = False
-
-device_id_atual = obter_device_id_navegador()
 
 SUGESTOES_INICIAIS = [
     (
@@ -646,79 +925,144 @@ if not manuais_cadastrados and (RAIZ / "data" / "manuais").exists():
     except Exception:
         pass
 
+device_id_atual = obter_device_id_navegador(repo)
 try:
     conversas_salvas = repo.listar_conversas_dispositivo(device_id_atual, limite=25)
 except Exception:
     conversas_salvas = []
 
-# ==================== GAVETA LATERAL (ESTILO GEMINI: NOVA CONVERSA + BIBLIOTECA + RECENTES) ====================
+# ==================== GAVETA LATERAL (ESTILO GEMINI: RAIL DE ÍCONES 68PX OU MENU EXPANDIDO 300PX) ====================
 with st.sidebar:
-    render_html(
-        f"""
-        <div style="display:flex;align-items:center;gap:10px;padding:0.2rem 0 0.7rem 0;">
-            <img src="{URI_D1}" alt="D1" style="width:32px;height:auto;">
-            <div>
-                <div style="font-weight:800;font-size:1.05rem;color:#0F172A;line-height:1.1;">Mara</div>
-                <div style="font-size:0.75rem;color:#64748B;">IA dos Desbravadores · {html.escape(cfg_env.nome_clube)}</div>
-            </div>
-        </div>
-        """
-    )
+    if st.session_state.sidebar_recolhida:
+        if st.button("☰", key="btn_rail_expandir", help="Expandir menu lateral"):
+            st.session_state.sidebar_recolhida = False
+            st.rerun()
 
-    if st.button("➕ Nova conversa", use_container_width=True):
-        iniciar_nova_conversa(ir_para_chat=True)
-        st.rerun()
+        if st.button("➕", key="btn_rail_nova", help="Nova conversa", type="primary"):
+            iniciar_nova_conversa(ir_para_chat=True)
+            st.rerun()
 
-    rotulo_btn_bib = (
-        "📚 Biblioteca (Ativa)"
-        if st.session_state.pagina_atual == "biblioteca"
-        else f"📚 Biblioteca ({len(CATALOGO_BIBLIOTECA)} guias)"
-    )
-    if st.button(rotulo_btn_bib, use_container_width=True):
-        st.session_state.pagina_atual = "biblioteca"
-        st.rerun()
+        if st.button(
+            "📚",
+            key="btn_rail_bib",
+            help=f"Biblioteca do Clube ({len(CATALOGO_BIBLIOTECA)} guias)",
+        ):
+            st.session_state.pagina_atual = "biblioteca"
+            st.rerun()
 
-    # Histórico de conversas recentes salvas neste navegador (sem login)
-    render_html('<div class="sidebar-section-label">Recentes neste navegador</div>')
-    if not conversas_salvas:
-        st.caption("Suas conversas aparecerão salvas aqui automaticamente.")
-    else:
-        for conv in conversas_salvas:
-            icone_conv = "🎯" if conv.modo == "simulado" else "💬"
-            destaque = "▸ " if conv.id == st.session_state.conversa_id else ""
-            c_abrir, c_del = st.columns([4.6, 1], gap="small", vertical_alignment="center")
-            if c_abrir.button(
-                f"{destaque}{icone_conv} {conv.titulo}",
-                key=f"open_{conv.id}",
-                use_container_width=True,
-            ):
-                carregada = repo.carregar_conversa(conv.id, device_id_atual)
-                if carregada:
-                    resumo, msgs = carregada
-                    st.session_state.conversa_id = resumo.id
-                    st.session_state.mensagens = msgs
-                    st.session_state.last_interaction_id = resumo.last_interaction_id
-                    st.session_state.modo_chat = (
-                        "🎯 Simulado / Quiz" if resumo.modo == "simulado" else "💬 Consulta"
-                    )
-                    st.session_state.categoria_ativa = resumo.categoria
-                    st.session_state.pagina_atual = "chat"
-                    st.rerun()
-            if c_del.button("✕", key=f"del_conv_{conv.id}", use_container_width=True):
-                repo.remover_conversa(conv.id, device_id_atual)
-                if st.session_state.conversa_id == conv.id:
-                    iniciar_nova_conversa(ir_para_chat=False)
+        if st.session_state.pagina_atual != "chat":
+            if st.button("💬", key="btn_rail_chat", help="Conversar com a Mara"):
+                st.session_state.pagina_atual = "chat"
                 st.rerun()
 
-    st.divider()
-    if st.session_state.pagina_atual != "admin":
-        if st.button("🔐 Painel da Diretoria", use_container_width=True):
-            st.session_state.pagina_atual = "admin"
-            st.rerun()
+        if conversas_salvas:
+            render_html('<div style="border-top:1px solid #CBD5E1;margin:0.35rem 0;"></div>')
+            for conv in conversas_salvas[:5]:
+                icone_conv = "🎯" if conv.modo == "simulado" else "💬"
+                if st.button(
+                    icone_conv,
+                    key=f"rail_open_{conv.id}",
+                    help=f"Abrir conversa: {conv.titulo}",
+                ):
+                    carregada = repo.carregar_conversa(conv.id, device_id_atual)
+                    if carregada:
+                        resumo, msgs = carregada
+                        st.session_state.conversa_id = resumo.id
+                        st.session_state.mensagens = msgs
+                        st.session_state.last_interaction_id = resumo.last_interaction_id
+                        st.session_state.modo_chat = (
+                            "🎯 Simulado / Quiz" if resumo.modo == "simulado" else "💬 Consulta"
+                        )
+                        st.session_state.categoria_ativa = resumo.categoria
+                        st.session_state.pagina_atual = "chat"
+                        st.rerun()
+
+        render_html('<div style="border-top:1px solid #CBD5E1;margin:0.35rem 0;"></div>')
+        if st.session_state.pagina_atual != "admin":
+            if st.button("🔐", key="btn_rail_admin", help="Painel da Diretoria"):
+                st.session_state.pagina_atual = "admin"
+                st.rerun()
+
+        render_html(
+            f"""
+            <div style="margin-top:0.5rem;text-align:center;">
+                <img src="{URI_D1}" alt="D1" title="Mara — IA dos Desbravadores" style="display:block;width:28px;height:auto;margin:0 auto;opacity:0.9;">
+            </div>
+            """
+        )
     else:
-        if st.button("💬 Voltar para a Mara", use_container_width=True):
-            st.session_state.pagina_atual = "chat"
+        c_menu, c_brand = st.columns([1, 4.8], gap="small", vertical_alignment="center")
+        if c_menu.button("☰", key="btn_rail_recolher", help="Recolher menu para barra de ícones"):
+            st.session_state.sidebar_recolhida = True
             st.rerun()
+        with c_brand:
+            render_html(
+                f"""
+                <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                    <img src="{URI_D1}" alt="D1" style="display:block;width:28px;height:auto;flex-shrink:0;">
+                    <div style="min-width:0;">
+                        <div style="font-weight:800;font-size:1rem;color:#0F172A;line-height:1.1;">Mara</div>
+                        <div style="font-size:0.72rem;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">IA dos Desbravadores · {html.escape(cfg_env.nome_clube)}</div>
+                    </div>
+                </div>
+                """
+            )
+
+        if st.button("➕ Nova conversa", key="btn_nova_conversa", use_container_width=True):
+            iniciar_nova_conversa(ir_para_chat=True)
+            st.rerun()
+
+        rotulo_btn_bib = (
+            "📚 Biblioteca (Ativa)"
+            if st.session_state.pagina_atual == "biblioteca"
+            else f"📚 Biblioteca ({len(CATALOGO_BIBLIOTECA)} guias)"
+        )
+        if st.button(rotulo_btn_bib, key="btn_biblioteca", use_container_width=True):
+            st.session_state.pagina_atual = "biblioteca"
+            st.rerun()
+
+        # Histórico de conversas recentes salvas neste navegador (sem login)
+        render_html('<div class="sidebar-section-label">Recentes neste navegador</div>')
+        if not conversas_salvas:
+            st.caption("Suas conversas aparecerão salvas aqui automaticamente.")
+        else:
+            for conv in conversas_salvas:
+                icone_conv = "🎯" if conv.modo == "simulado" else "💬"
+                destaque = "▸ " if conv.id == st.session_state.conversa_id else ""
+                c_abrir, c_del = st.columns([5.2, 1], gap="small", vertical_alignment="center")
+                if c_abrir.button(
+                    f"{destaque}{icone_conv} {conv.titulo}",
+                    key=f"open_{conv.id}",
+                    help=conv.titulo,
+                    use_container_width=True,
+                ):
+                    carregada = repo.carregar_conversa(conv.id, device_id_atual)
+                    if carregada:
+                        resumo, msgs = carregada
+                        st.session_state.conversa_id = resumo.id
+                        st.session_state.mensagens = msgs
+                        st.session_state.last_interaction_id = resumo.last_interaction_id
+                        st.session_state.modo_chat = (
+                            "🎯 Simulado / Quiz" if resumo.modo == "simulado" else "💬 Consulta"
+                        )
+                        st.session_state.categoria_ativa = resumo.categoria
+                        st.session_state.pagina_atual = "chat"
+                        st.rerun()
+                if c_del.button("✕", key=f"del_conv_{conv.id}", help="Excluir conversa", use_container_width=True):
+                    repo.remover_conversa(conv.id, device_id_atual)
+                    if st.session_state.conversa_id == conv.id:
+                        iniciar_nova_conversa(ir_para_chat=False)
+                    st.rerun()
+
+        st.divider()
+        if st.session_state.pagina_atual != "admin":
+            if st.button("🔐 Painel da Diretoria", key="btn_admin", use_container_width=True):
+                st.session_state.pagina_atual = "admin"
+                st.rerun()
+        else:
+            if st.button("💬 Voltar para a Mara", key="btn_voltar_mara", use_container_width=True):
+                st.session_state.pagina_atual = "chat"
+                st.rerun()
 
 
 # ==============================================================================
