@@ -37,6 +37,11 @@ from chatdbv.ingestao import (
     ingerir_arquivo,
     ingerir_pasta,
 )
+from chatdbv.pdf_export import (
+    gerar_pdf_conversa,
+    gerar_pdf_guia_biblioteca,
+    gerar_pdf_resposta,
+)
 from chatdbv.rag import MotorRAG
 
 PASTA_LOGOS = RAIZ / "assets" / "imagens" / "Logos"
@@ -511,6 +516,34 @@ render_html(
         color: #0047AB !important;
         transform: translateY(-1px);
         box-shadow: 0 4px 10px rgba(0, 71, 171, 0.08) !important;
+    }}
+
+    /* Botões de Download PDF e ações dentro das mensagens do chat */
+    div.stMainBlockContainer .stDownloadButton button {{
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 0.82rem !important;
+        padding: 0.35rem 0.75rem !important;
+        min-height: 2.25rem !important;
+        text-align: center !important;
+        justify-content: center !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+        transition: all 0.15s ease !important;
+    }}
+    div.stMainBlockContainer .stDownloadButton button:hover {{
+        background: #EFF6FF !important;
+        border-color: #0047AB !important;
+        color: #0047AB !important;
+    }}
+    div[data-testid="stChatMessage"] .stButton button {{
+        min-height: 2.25rem !important;
+        padding: 0.3rem 0.6rem !important;
+        border-radius: 10px !important;
+        text-align: center !important;
+        justify-content: center !important;
     }}
 
     /* Barra inferior do Chat (stBottom) estilo seletor de modelo/modo do Gemini */
@@ -1386,6 +1419,21 @@ if st.session_state.pagina_atual == "biblioteca":
             )
             with st.expander("📖 Ver resumo estruturado pronto", expanded=False):
                 st.markdown(item.resumo_markdown)
+                pdf_guia_bytes = gerar_pdf_guia_biblioteca(
+                    titulo=item.titulo,
+                    subtitulo=item.subtitulo,
+                    badge=item.badge,
+                    resumo_md=item.resumo_markdown,
+                    nome_clube=cfg_env.nome_clube,
+                )
+                st.download_button(
+                    label="📄 Baixar Guia Rápido em PDF",
+                    data=pdf_guia_bytes,
+                    file_name=f"guia_mara_{item.id}.pdf",
+                    mime="application/pdf",
+                    key=f"dl_pdf_bib_{item.id}",
+                    use_container_width=True,
+                )
 
             b_chat, b_quiz = st.columns(2)
             if b_chat.button(
@@ -1513,20 +1561,57 @@ if not st.session_state.mensagens:
 # Quando já há conversa no histórico, mostra a barra superior discreta e o chat ancorado no rodapé
 rotulo_escopo = ROTULOS_CATEGORIAS.get(categoria_filtro, categoria_filtro)
 badge_modo = "🎯 Modo Simulado" if modo_quiz else "💬 Modo Consulta"
-render_html(
-    f"""
-    <div class="dbv-topbar">
-        <div class="dbv-topbar-left">
-            <img src="{URI_D1}" alt="D1">
-            <span class="dbv-topbar-title">Mara</span>
+tem_resposta_assistente = any(m.get("role") == "assistant" for m in st.session_state.mensagens)
+if tem_resposta_assistente:
+    col_top_info, col_top_pdf = st.columns([4.2, 1.3], vertical_alignment="center")
+else:
+    col_top_info = st.container()
+    col_top_pdf = None
+
+with col_top_info:
+    render_html(
+        f"""
+        <div class="dbv-topbar">
+            <div class="dbv-topbar-left">
+                <img src="{URI_D1}" alt="D1">
+                <span class="dbv-topbar-title">Mara</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <span class="dbv-topbar-badge">{badge_modo}</span>
+                <span class="dbv-topbar-badge">{html.escape(rotulo_escopo)}</span>
+            </div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-            <span class="dbv-topbar-badge">{badge_modo}</span>
-            <span class="dbv-topbar-badge">{html.escape(rotulo_escopo)}</span>
-        </div>
-    </div>
-    """
-)
+        """
+    )
+
+if col_top_pdf is not None:
+    with col_top_pdf:
+        primeira_msg_top = next(
+            (m["content"] for m in st.session_state.mensagens if m.get("role") == "user"),
+            "Conversa com a Mara",
+        )
+        titulo_pdf_conv = gerar_titulo_conversa(primeira_msg_top)
+        bytes_pdf_conv = gerar_pdf_conversa(
+            titulo=titulo_pdf_conv,
+            mensagens=st.session_state.mensagens,
+            nome_clube=cfg_env.nome_clube,
+            categoria=categoria_filtro,
+            modo_quiz=modo_quiz,
+        )
+        nome_arq_conv = (
+            f"simulado_mara_{st.session_state.conversa_id or 'atual'}.pdf"
+            if modo_quiz
+            else f"conversa_mara_{st.session_state.conversa_id or 'atual'}.pdf"
+        )
+        st.download_button(
+            label="📄 Exportar PDF",
+            data=bytes_pdf_conv,
+            file_name=nome_arq_conv,
+            mime="application/pdf",
+            key="btn_dl_conversa_completa_top",
+            help="Baixar toda a conversa ou simulado em PDF pronto para impressão",
+            use_container_width=True,
+        )
 
 # ==================== HISTÓRICO DA CONVERSA ATIVA ====================
 for idx, msg in enumerate(st.session_state.mensagens):
@@ -1536,13 +1621,33 @@ for idx, msg in enumerate(st.session_state.mensagens):
         if msg.get("trechos"):
             renderizar_fontes(msg["trechos"], exibir_detalhes=cfg_env.exibir_detalhes_tecnicos)
         if msg["role"] == "assistant":
-            c_up, c_down, _ = st.columns([1, 1, 10])
+            c_up, c_down, c_pdf, _ = st.columns([0.9, 0.9, 2.8, 7.4], vertical_alignment="center")
             if c_up.button("👍", key=f"up_{idx}", help="Resposta útil"):
                 repo.registrar_feedback(msg.get("pergunta", ""), msg["content"], True)
                 st.toast("Obrigado pelo feedback! 🔺")
             if c_down.button("👎", key=f"down_{idx}", help="Resposta imprecisa"):
                 repo.registrar_feedback(msg.get("pergunta", ""), msg["content"], False)
                 st.toast("Feedback registrado para revisão.")
+            eh_quiz_msg = modo_quiz or ("<details" in str(msg.get("content", "")).lower())
+            bytes_pdf_msg = gerar_pdf_resposta(
+                pergunta=str(msg.get("pergunta", "")),
+                resposta_md=str(msg.get("content", "")),
+                trechos=msg.get("trechos") or [],
+                nome_clube=cfg_env.nome_clube,
+                categoria=categoria_filtro,
+                modo_quiz=eh_quiz_msg,
+            )
+            rotulo_dl_msg = "📄 Baixar Prova (PDF)" if eh_quiz_msg else "📄 Baixar em PDF"
+            nome_arq_msg = f"simulado_mara_{idx + 1}.pdf" if eh_quiz_msg else f"estudo_mara_{idx + 1}.pdf"
+            c_pdf.download_button(
+                label=rotulo_dl_msg,
+                data=bytes_pdf_msg,
+                file_name=nome_arq_msg,
+                mime="application/pdf",
+                key=f"dl_pdf_msg_{idx}",
+                help="Baixar esta resposta ou simulado em PDF formatado para impressão",
+                use_container_width=True,
+            )
 
 # ==================== COMPOSER INFERIOR (QUANDO JÁ HÁ HISTÓRICO) ====================
 with st._bottom:
@@ -1681,6 +1786,26 @@ if st.session_state.mensagens and st.session_state.mensagens[-1]["role"] == "use
             placeholder_resposta.markdown(resposta_completa)
 
         renderizar_fontes(trechos, exibir_detalhes=cfg_env.exibir_detalhes_tecnicos)
+
+        eh_quiz_novo = modo_quiz or ("<details" in str(resposta_completa).lower())
+        bytes_pdf_novo = gerar_pdf_resposta(
+            pergunta=ultima_pergunta,
+            resposta_md=str(resposta_completa),
+            trechos=trechos,
+            nome_clube=cfg_env.nome_clube,
+            categoria=categoria_filtro,
+            modo_quiz=eh_quiz_novo,
+        )
+        c_up_n, c_down_n, c_pdf_n, _ = st.columns([0.9, 0.9, 2.8, 7.4], vertical_alignment="center")
+        c_pdf_n.download_button(
+            label="📄 Baixar Prova (PDF)" if eh_quiz_novo else "📄 Baixar em PDF",
+            data=bytes_pdf_novo,
+            file_name="simulado_mara.pdf" if eh_quiz_novo else "estudo_mara.pdf",
+            mime="application/pdf",
+            key="dl_pdf_msg_recem_gerada",
+            help="Baixar esta resposta ou simulado em PDF formatado para impressão",
+            use_container_width=True,
+        )
 
     st.session_state.mensagens.append(
         {

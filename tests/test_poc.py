@@ -187,3 +187,85 @@ def test_persistencia_conversas_navegador_e_biblioteca(tmp_path: Path) -> None:
     repo.remover_conversa("conv_123", "dbv_device_abc")
     assert len(repo.listar_conversas_dispositivo("dbv_device_abc")) == 0
 
+
+def test_exportacao_pdf_consulta_simulado_e_biblioteca() -> None:
+    import io
+    from pypdf import PdfReader
+    from chatdbv.biblioteca import CATALOGO_BIBLIOTECA
+    from chatdbv.db import TrechoRecuperado
+    from chatdbv.pdf_export import (
+        gerar_pdf_conversa,
+        gerar_pdf_guia_biblioteca,
+        gerar_pdf_resposta,
+    )
+
+    trecho = TrechoRecuperado(
+        chunk_id=10,
+        manual_titulo="Regulamento de Uniformes",
+        arquivo="02_regulamento_uniformes_dsa.md",
+        categoria="UNIFORMES",
+        pagina=3,
+        texto="A Insígnia de Excelência é usada acima da tampa do bolso esquerdo.",
+        similaridade=0.95,
+        score_rrf=0.032,
+    )
+
+    # 1. PDF de resposta de consulta com acentuação e emojis
+    pdf_consulta = gerar_pdf_resposta(
+        pergunta="Onde fica a Insígnia de Excelência no uniforme de gala?",
+        resposta_md="## Posição Oficial\n\n- Fica **acima da tampa do bolso esquerdo** ✅.",
+        trechos=[trecho],
+        nome_clube="Clube Órion",
+        categoria="UNIFORMES",
+        modo_quiz=False,
+    )
+    assert pdf_consulta.startswith(b"%PDF-")
+    leitor1 = PdfReader(io.BytesIO(pdf_consulta))
+    assert len(leitor1.pages) >= 1
+
+    # 2. PDF de simulado com bloco <details> de gabarito
+    resposta_quiz = (
+        "## 🎯 Simulado de Uniformes\n\n"
+        "1. Onde fica a Insígnia de Excelência?\n"
+        "A) No bolso direito\n"
+        "B) Acima da tampa do bolso esquerdo\n\n"
+        "<details><summary>Ver Gabarito Comentado</summary>\n"
+        "1. **B** — Conforme o Regulamento de Uniformes (pág. 3).\n"
+        "</details>"
+    )
+    pdf_quiz = gerar_pdf_resposta(
+        pergunta="Simulado sobre uniformes",
+        resposta_md=resposta_quiz,
+        trechos=[trecho],
+        nome_clube="Clube Órion",
+        categoria="UNIFORMES",
+        modo_quiz=True,
+    )
+    assert pdf_quiz.startswith(b"%PDF-")
+    leitor2 = PdfReader(io.BytesIO(pdf_quiz))
+    assert len(leitor2.pages) >= 1
+
+    # 3. PDF de conversa completa e de guia da Biblioteca
+    pdf_conv = gerar_pdf_conversa(
+        titulo="Estudo de Uniformes",
+        mensagens=[
+            {"role": "user", "content": "Onde fica a Insígnia de Excelência?"},
+            {"role": "assistant", "content": resposta_quiz, "trechos": [trecho]},
+        ],
+        nome_clube="Clube Órion",
+        categoria="UNIFORMES",
+        modo_quiz=True,
+    )
+    assert pdf_conv.startswith(b"%PDF-")
+
+    item_bib = CATALOGO_BIBLIOTECA[0]
+    pdf_bib = gerar_pdf_guia_biblioteca(
+        titulo=item_bib.titulo,
+        subtitulo=item_bib.subtitulo,
+        badge=item_bib.badge,
+        resumo_md=item_bib.resumo_markdown,
+        nome_clube="Clube Órion",
+    )
+    assert pdf_bib.startswith(b"%PDF-")
+
+
