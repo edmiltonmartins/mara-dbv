@@ -204,6 +204,7 @@ class RepositorioRAG(Protocol):
         mensagens: list[dict],
         last_interaction_id: str | None = None,
     ) -> None: ...
+    def obter_device_id_mais_recente(self) -> str | None: ...
     def listar_conversas_dispositivo(
         self, device_id: str, limite: int = 30
     ) -> list[ConversaResumo]: ...
@@ -468,6 +469,14 @@ class PostgresRepositorio:
                 (conversa_id, device_id, titulo, modo, categoria, last_interaction_id, payload),
             )
             conn.commit()
+
+    def obter_device_id_mais_recente(self) -> str | None:
+        with self._conectar() as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT device_id FROM conversas ORDER BY atualizado_em DESC LIMIT 1"
+            )
+            r = cur.fetchone()
+            return str(r[0]) if r and r[0] else None
 
     def listar_conversas_dispositivo(
         self, device_id: str, limite: int = 30
@@ -814,6 +823,14 @@ class SqliteRepositorio:
                 """,
                 (conversa_id, device_id, titulo, modo, categoria, last_interaction_id, payload),
             )
+
+    def obter_device_id_mais_recente(self) -> str | None:
+        with self._conectar() as conn:
+            cur = conn.execute(
+                "SELECT device_id FROM conversas ORDER BY atualizado_em DESC LIMIT 1"
+            )
+            r = cur.fetchone()
+            return str(r[0]) if r and r[0] else None
 
     def listar_conversas_dispositivo(
         self, device_id: str, limite: int = 30
