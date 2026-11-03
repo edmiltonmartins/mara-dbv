@@ -9,6 +9,7 @@ Suporta dois backends com a mesma interface:
 from __future__ import annotations
 
 import json
+import math
 import re
 import sqlite3
 from dataclasses import dataclass
@@ -45,11 +46,11 @@ def filtrar_trechos_relevantes(
             continue
 
         if tem_algum_lexical:
-            # Se há trechos que batem nos termos da pergunta, prioriza quem tem match lexical
-            # ou quem tem similaridade semântica muito próxima do 1º colocado
-            if tem_lexical and (idx == 0 or t.similaridade >= melhor_sim - 0.12):
+            # Se há trechos que batem nos termos da pergunta, mantém quem tem match lexical
+            # com similaridade mínima aceitável ou quem tem similaridade semântica muito próxima do topo
+            if tem_lexical and (idx == 0 or t.similaridade >= 0.45):
                 relevantes.append(t)
-            elif not tem_lexical and t.similaridade >= max(0.66, melhor_sim - 0.03):
+            elif not tem_lexical and t.similaridade >= max(0.66, melhor_sim - 0.05):
                 relevantes.append(t)
         else:
             # Consulta puramente conceitual (sem palavras exatas): mantém apenas a faixa de topo
@@ -729,12 +730,29 @@ class SqliteRepositorio:
         ]
 
         sims: list[float] = []
-        scores_lex: list[int] = []
-        for linha in linhas:
+        scores_lex: list[float] = []
+        termos_unicos = list(dict.fromkeys(termos))
+        textos_lower = [linha[5].lower() for linha in linhas]
+        n_docs = len(linhas)
+        idf = {
+            t: math.log((n_docs + 1) / (sum(1 for txt in textos_lower if t in txt) + 1)) + 1.0
+            for t in termos_unicos
+        }
+        bigramas = [f"{termos_unicos[k]} {termos_unicos[k + 1]}" for k in range(len(termos_unicos) - 1)]
+
+        for idx_linha, linha in enumerate(linhas):
             emb = np.asarray(json.loads(linha[6]), dtype=np.float32)
             sims.append(float(np.dot(emb, q_vec)))
-            texto_lower = linha[5].lower()
-            scores_lex.append(sum(texto_lower.count(t) for t in termos))
+            texto_lower = textos_lower[idx_linha]
+            score_l = 0.0
+            for t in termos_unicos:
+                cnt = texto_lower.count(t)
+                if cnt > 0:
+                    score_l += idf[t] * (1.0 + 0.25 * min(cnt, 4))
+            for bg in bigramas:
+                if bg in texto_lower:
+                    score_l += 2.0
+            scores_lex.append(score_l)
 
         ordem_sem = sorted(range(len(linhas)), key=lambda i: sims[i], reverse=True)
         rank_sem = {idx: pos + 1 for pos, idx in enumerate(ordem_sem)}
