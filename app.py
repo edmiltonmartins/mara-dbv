@@ -663,6 +663,58 @@ render_html(
         color: #94A3B8 !important;
     }}
 
+    /* Botão Popover Seletor de Modo (Reduzido para ícone estilo Gemini) */
+    div[data-testid="stPopover"] {{
+        display: inline-flex !important;
+        align-items: center !important;
+    }}
+    div[data-testid="stPopover"] > button,
+    button[data-testid="stPopoverButton"] {{
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+        border: 1.5px solid #CBD5E1 !important;
+        border-radius: 12px !important;
+        width: 38px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+        transition: all 0.16s ease !important;
+    }}
+    div[data-testid="stPopover"] > button:hover,
+    button[data-testid="stPopoverButton"]:hover {{
+        background: #EFF6FF !important;
+        border-color: #0047AB !important;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 71, 171, 0.14) !important;
+    }}
+    div[data-testid="stPopover"] > button div,
+    div[data-testid="stPopover"] > button p,
+    button[data-testid="stPopoverButton"] p,
+    div[data-testid="stPopover"] > button span,
+    button[data-testid="stPopoverButton"] span {{
+        font-size: 1.22rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+    div[data-testid="stPopoverBody"] {{
+        background: #FFFFFF !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 14px !important;
+        padding: 0.85rem !important;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12) !important;
+        max-width: 290px !important;
+    }}
+
     /* Barra Lateral Estilo Gemini (Alterna entre Rail de Ícones 68px e Menu 300px) */
     section[data-testid="stSidebar"],
     section[data-testid="stSidebar"][aria-expanded="false"],
@@ -1077,6 +1129,43 @@ def renderizar_fontes(trechos: list[TrechoRecuperado], exibir_detalhes: bool = F
                 </div>
                 """
             )
+
+
+def renderizar_seletor_modo_compacto(key_sufixo: str = "bottom") -> None:
+    """Menu seletor compacto para Consulta vs Simulado, reduzindo apenas para o ícone ativo."""
+    eh_quiz = st.session_state.modo_chat == "🎯 Simulado / Quiz"
+    icone_atual = "🎯" if eh_quiz else "💬"
+    nome_atual = "Simulado / Quiz" if eh_quiz else "Consulta"
+
+    c_pop, c_escopo, _ = st.columns([0.65, 3.8, 5.55], vertical_alignment="center")
+    with c_pop:
+        with st.popover(
+            icone_atual,
+            help=f"Modo: {nome_atual}. Clique para alternar entre Consulta e Simulado.",
+            use_container_width=False,
+        ):
+            st.markdown("##### ⚙️ Modo de Resposta")
+            st.caption("Escolha como a Mara deve responder:")
+            escolha = st.radio(
+                "Modo da Mara",
+                options=["💬 Consulta", "🎯 Simulado / Quiz"],
+                index=1 if eh_quiz else 0,
+                key=f"radio_popover_modo_{key_sufixo}",
+                label_visibility="collapsed",
+            )
+            if escolha != st.session_state.modo_chat:
+                st.session_state.modo_chat = escolha
+                st.rerun()
+
+    with c_escopo:
+        if st.session_state.categoria_ativa != "TODAS":
+            if st.button(
+                f"📂 Escopo: {st.session_state.categoria_ativa} ✕",
+                key=f"btn_limpar_escopo_{key_sufixo}",
+                help="Clique para remover o filtro e pesquisar em todos os manuais",
+            ):
+                st.session_state.categoria_ativa = "TODAS"
+                st.rerun()
 
 
 def iniciar_nova_conversa(ir_para_chat: bool = True) -> None:
@@ -1664,31 +1753,16 @@ if not st.session_state.mensagens:
 
     # Barra de chat centralizada logo abaixo da saudação (inline por estar dentro de st.container)
     with st.container():
+        renderizar_seletor_modo_compacto(key_sufixo="home")
+        texto_placeholder_home = (
+            "Digite o tema para a Mara montar o simulado..."
+            if (st.session_state.modo_chat == "🎯 Simulado / Quiz")
+            else "Pergunte à Mara sobre classes, especialidades, nós..."
+        )
         entrada_chat = st.chat_input(
-            "Pergunte à Mara ou digite o tema para simulado...",
+            texto_placeholder_home,
             key="chat_input_principal_fixo",
         )
-        col_modo, col_escopo = st.columns([2.5, 3.5])
-        with col_modo:
-            modo_escolhido = st.segmented_control(
-                "Modo da IA",
-                options=["💬 Consulta", "🎯 Simulado / Quiz"],
-                default=st.session_state.modo_chat,
-                key="seletor_modo_home_centro",
-                label_visibility="collapsed",
-            )
-            if modo_escolhido and modo_escolhido != st.session_state.modo_chat:
-                st.session_state.modo_chat = modo_escolhido
-                modo_quiz = modo_escolhido == "🎯 Simulado / Quiz"
-
-        with col_escopo:
-            if st.session_state.categoria_ativa != "TODAS":
-                if st.button(
-                    f"📂 Escopo: {st.session_state.categoria_ativa} ✕ (limpar)",
-                    key="btn_limpar_escopo_centro",
-                ):
-                    st.session_state.categoria_ativa = "TODAS"
-                    st.rerun()
 
     st.write("")
     c1, c2 = st.columns(2)
@@ -1806,33 +1880,18 @@ for idx, msg in enumerate(st.session_state.mensagens):
             )
 
 # ==================== COMPOSER INFERIOR (QUANDO JÁ HÁ HISTÓRICO) ====================
-with st._bottom:
-    col_modo, col_escopo = st.columns([2.5, 3.5])
-    with col_modo:
-        modo_escolhido = st.segmented_control(
-            "Modo da IA",
-            options=["💬 Consulta", "🎯 Simulado / Quiz"],
-            default=st.session_state.modo_chat,
-            key="seletor_modo_bottom",
-            label_visibility="collapsed",
-        )
-        if modo_escolhido and modo_escolhido != st.session_state.modo_chat:
-            st.session_state.modo_chat = modo_escolhido
-            modo_quiz = modo_escolhido == "🎯 Simulado / Quiz"
-
-    with col_escopo:
-        if st.session_state.categoria_ativa != "TODAS":
-            if st.button(
-                f"📂 Escopo: {st.session_state.categoria_ativa} ✕ (limpar)",
-                key="btn_limpar_escopo_bottom",
-            ):
-                st.session_state.categoria_ativa = "TODAS"
-                st.rerun()
-
-entrada_chat = st.chat_input(
-    "Pergunte à Mara ou digite o tema para simulado...",
-    key="chat_input_conversa_bottom",
-)
+bottom_container = st.bottom if hasattr(st, "bottom") else st._bottom
+with bottom_container:
+    renderizar_seletor_modo_compacto(key_sufixo="bottom")
+    texto_placeholder_bottom = (
+        "Digite o tema para a Mara montar o simulado..."
+        if modo_quiz
+        else "Pergunte à Mara sobre classes, especialidades, nós..."
+    )
+    entrada_chat = st.chat_input(
+        texto_placeholder_bottom,
+        key="chat_input_conversa_bottom",
+    )
 
 if entrada_chat:
     if not motor:
