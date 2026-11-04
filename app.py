@@ -568,12 +568,99 @@ render_html(
         background-color: #FFFFFF !important;
     }}
     div[data-testid="stBottom"] {{
-        border-top: 1px solid #E2E8F0 !important;
-        box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.04) !important;
+        border-top: 1px solid #CBD5E1 !important;
+        box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.05) !important;
     }}
     div[data-testid="stBottom"] > div {{
         padding-top: 0.35rem !important;
-        padding-bottom: 1.4rem !important;
+        padding-bottom: 1.25rem !important;
+    }}
+
+    /* Caixa de Entrada do Chat (stChatInput) com Alto Contraste e Destaque Visual */
+    div[data-testid="stChatInput"] {{
+        max-width: 920px !important;
+        margin: 0 auto !important;
+        padding: 0.3rem 0.25rem 0.5rem 0.25rem !important;
+    }}
+    div[data-testid="stChatInput"] > div,
+    div[data-testid="stChatInput"] [data-baseweb="base-input"] {{
+        background-color: #FFFFFF !important;
+        background: #FFFFFF !important;
+        border: 1.5px solid #94A3B8 !important;
+        border-radius: 20px !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease !important;
+        padding: 0.3rem 0.75rem !important;
+    }}
+    div[data-testid="stChatInput"] > div:hover,
+    div[data-testid="stChatInput"] [data-baseweb="base-input"]:hover {{
+        border-color: #475569 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12) !important;
+    }}
+    div[data-testid="stChatInput"]:focus-within > div,
+    div[data-testid="stChatInput"] > div:focus-within,
+    div[data-testid="stChatInput"] [data-baseweb="base-input"]:focus-within {{
+        border-color: #0047AB !important;
+        box-shadow: 0 0 0 3px rgba(0, 71, 171, 0.2), 0 4px 18px rgba(0, 71, 171, 0.1) !important;
+        background-color: #FFFFFF !important;
+    }}
+    div[data-testid="stChatInput"] textarea,
+    textarea[data-testid="stChatInputTextArea"] {{
+        color: #0F172A !important;
+        font-size: 0.95rem !important;
+        line-height: 1.48 !important;
+        font-weight: 500 !important;
+        caret-color: #0047AB !important;
+        background: transparent !important;
+    }}
+    div[data-testid="stChatInput"] textarea::placeholder,
+    textarea[data-testid="stChatInputTextArea"]::placeholder {{
+        color: #64748B !important;
+        font-weight: 500 !important;
+        opacity: 1 !important;
+    }}
+    div[data-testid="stChatInput"] button,
+    button[data-testid="stChatInputSubmitButton"] {{
+        background-color: #0047AB !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 12px !important;
+        width: 36px !important;
+        min-width: 36px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 2px 6px rgba(0, 71, 171, 0.28) !important;
+        transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+        cursor: pointer !important;
+    }}
+    div[data-testid="stChatInput"] button svg,
+    button[data-testid="stChatInputSubmitButton"] svg {{
+        fill: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+        color: #FFFFFF !important;
+    }}
+    div[data-testid="stChatInput"] button:hover:not(:disabled),
+    button[data-testid="stChatInputSubmitButton"]:hover:not(:disabled) {{
+        background-color: #003380 !important;
+        transform: scale(1.06) !important;
+        box-shadow: 0 4px 12px rgba(0, 71, 171, 0.38) !important;
+    }}
+    div[data-testid="stChatInput"] button:disabled,
+    button[data-testid="stChatInputSubmitButton"]:disabled {{
+        background-color: #E2E8F0 !important;
+        opacity: 0.75 !important;
+        box-shadow: none !important;
+        cursor: not-allowed !important;
+    }}
+    div[data-testid="stChatInput"] button:disabled svg,
+    button[data-testid="stChatInputSubmitButton"]:disabled svg {{
+        fill: #94A3B8 !important;
+        stroke: #94A3B8 !important;
+        color: #94A3B8 !important;
     }}
 
     /* Barra Lateral Estilo Gemini (Alterna entre Rail de Ícones 68px e Menu 300px) */
