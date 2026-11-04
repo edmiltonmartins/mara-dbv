@@ -863,6 +863,46 @@ def gerar_titulo_conversa(primeira_pergunta: str) -> str:
     return limpo[:41].rstrip() + "..."
 
 
+# ==================== BLINDAGEM DE ENTRADA & RATE LIMITING ====================
+MAX_CHARS_PERGUNTA = 600
+
+
+def validar_pergunta_usuario(texto: str) -> str | None:
+    """Valida o tamanho da pergunta e aplica proteção de rate limit (cooldown) por sessão."""
+    import time
+    txt = (texto or "").strip()
+    if not txt:
+        return None
+    if len(txt) > MAX_CHARS_PERGUNTA:
+        st.error(
+            f"⚠️ Sua pergunta ultrapassou o limite de {MAX_CHARS_PERGUNTA} caracteres ({len(txt)} caracteres digitados). "
+            "Por favor, resuma sua dúvida para garantir precisão e segurança na resposta da Mara."
+        )
+        return None
+
+    agora = time.time()
+    if "historico_timestamps" not in st.session_state:
+        st.session_state.historico_timestamps = []
+
+    # Mantém apenas requisições dos últimos 60 segundos
+    st.session_state.historico_timestamps = [
+        t for t in st.session_state.historico_timestamps if agora - t < 60
+    ]
+
+    # Limite de 12 perguntas por minuto por usuário
+    if len(st.session_state.historico_timestamps) >= 12:
+        st.warning("⏳ Limite de perguntas por minuto atingido. Aguarde alguns instantes antes de enviar uma nova dúvida.")
+        return None
+
+    # Cooldown mínimo de 2 segundos entre mensagens consecutivas para evitar flood
+    if st.session_state.historico_timestamps and (agora - st.session_state.historico_timestamps[-1] < 2.0):
+        st.toast("⏳ Aguarde 2 segundos antes de enviar outra pergunta.")
+        return None
+
+    st.session_state.historico_timestamps.append(agora)
+    return txt
+
+
 # ==================== ESTADO INICIAL DE SESSÃO ====================
 if "conversa_id" not in st.session_state:
     st.session_state.conversa_id = None
@@ -1554,8 +1594,10 @@ if not st.session_state.mensagens:
                 "Configure a chave da API no **Painel da Diretoria** (menu lateral esquerdo) para iniciar."
             )
         else:
-            st.session_state.mensagens.append({"role": "user", "content": pergunta_ativa})
-            st.rerun()
+            p_val = validar_pergunta_usuario(pergunta_ativa)
+            if p_val:
+                st.session_state.mensagens.append({"role": "user", "content": p_val})
+                st.rerun()
     st.stop()
 
 # Quando já há conversa no histórico, mostra a barra superior discreta e o chat ancorado no rodapé
@@ -1684,8 +1726,10 @@ if entrada_chat:
             "Configure a chave da API no **Painel da Diretoria** (menu lateral esquerdo) para iniciar."
         )
     else:
-        st.session_state.mensagens.append({"role": "user", "content": entrada_chat})
-        st.rerun()
+        p_val = validar_pergunta_usuario(entrada_chat)
+        if p_val:
+            st.session_state.mensagens.append({"role": "user", "content": p_val})
+            st.rerun()
 
 # Se a última mensagem na fila for do usuário, gera a resposta com feedback visual em tempo real
 if st.session_state.mensagens and st.session_state.mensagens[-1]["role"] == "user":

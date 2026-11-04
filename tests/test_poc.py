@@ -269,3 +269,47 @@ def test_exportacao_pdf_consulta_simulado_e_biblioteca() -> None:
     assert pdf_bib.startswith(b"%PDF-")
 
 
+def test_blindagem_zero_token_guard_e_limites() -> None:
+    from chatdbv.db import TrechoRecuperado
+    from chatdbv.rag import (
+        MAX_CARACTERES_PERGUNTA,
+        MAX_OUTPUT_TOKENS,
+        RESPOSTA_FORA_DE_ESCOPO_PADRAO,
+        RESPOSTA_SAUDACAO_PADRAO,
+        verificar_resposta_zero_token,
+    )
+
+    assert MAX_CARACTERES_PERGUNTA == 600
+    assert MAX_OUTPUT_TOKENS == 1200
+
+    # 1. Saudações sem trechos devem retornar saudação padrão sem gastar tokens
+    assert verificar_resposta_zero_token("Olá Mara!", []) == RESPOSTA_SAUDACAO_PADRAO
+    assert verificar_resposta_zero_token("Maranata", []) == RESPOSTA_SAUDACAO_PADRAO
+    assert verificar_resposta_zero_token("Bom dia!", []) == RESPOSTA_SAUDACAO_PADRAO
+
+    # 2. Pergunta fora de escopo sem trechos nos manuais
+    assert (
+        verificar_resposta_zero_token("Como fazer bolo de chocolate?", [])
+        == RESPOSTA_FORA_DE_ESCOPO_PADRAO
+    )
+
+    # 3. Pergunta com trechos relevantes não deve ser interceptada pelo guardião
+    trecho_valido = TrechoRecuperado(
+        chunk_id=1,
+        manual_titulo="Uniformes",
+        arquivo="02_uniformes.md",
+        categoria="UNIFORMES",
+        pagina=1,
+        texto="Uniforme de gala padrão DSA",
+        similaridade=0.88,
+        score_rrf=0.03,
+    )
+    assert (
+        verificar_resposta_zero_token(
+            "Qual a cor do lenço de desbravador?", [trecho_valido]
+        )
+        is None
+    )
+
+
+
