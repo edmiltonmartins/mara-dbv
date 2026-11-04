@@ -354,18 +354,39 @@ render_html(
         --dbv-vermelho: #FF1300;
     }}
 
-    /* Fundo clean claro estilo Gemini */
-    .stApp {{
-        background-color: #F8FAFC;
+    /* Fundo clean claro estilo Gemini (Branco Puro e Solido) */
+    .stApp,
+    [data-testid="stAppViewContainer"],
+    section.main,
+    div.stMainBlockContainer,
+    div[data-testid="stVerticalBlock"] {{
+        background-color: #FFFFFF !important;
         cursor: default;
         caret-color: transparent;
     }}
 
-    /* Formato geral amplo sem corte no topo */
+    /* Formato geral amplo com respiro inferior generoso para o chat */
     div.stMainBlockContainer {{
-        max-width: 1140px !important;
-        padding-top: 1.25rem !important;
-        padding-bottom: 6.5rem !important;
+        max-width: 1080px !important;
+        padding-top: 1rem !important;
+        padding-bottom: 9.5rem !important;
+    }}
+
+    /* Desativa completamente o efeito fantasma / opacidade reduzida do Streamlit durante o rerun */
+    [data-stale="true"],
+    [data-stale="true"] *,
+    .stChatMessage,
+    div[data-testid="stChatMessage"],
+    div[data-testid="stChatMessage"] *,
+    [data-testid="stAppViewBlockContainer"],
+    .element-container,
+    div[data-testid="stVerticalBlock"] > div {{
+        opacity: 1 !important;
+        filter: none !important;
+        transition: none !important;
+    }}
+    [data-testid="stBlock"] > div[style*="opacity"] {{
+        opacity: 1 !important;
     }}
 
     /* Oculta a barra superior vazia do Streamlit, botões nativos de colapso e badges */
@@ -546,10 +567,19 @@ render_html(
         justify-content: center !important;
     }}
 
-    /* Barra inferior do Chat (stBottom) estilo seletor de modelo/modo do Gemini */
+    /* Barra inferior do Chat (stBottom) 100% sólida e branca estilo Gemini */
+    div[data-testid="stBottom"],
     div[data-testid="stBottom"] > div {{
-        background: linear-gradient(180deg, rgba(248,250,252,0) 0%, #F8FAFC 28%, #F8FAFC 100%) !important;
-        padding-bottom: 1.8rem !important;
+        background: #FFFFFF !important;
+        background-color: #FFFFFF !important;
+    }}
+    div[data-testid="stBottom"] {{
+        border-top: 1px solid #E2E8F0 !important;
+        box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.04) !important;
+    }}
+    div[data-testid="stBottom"] > div {{
+        padding-top: 0.35rem !important;
+        padding-bottom: 1.4rem !important;
     }}
 
     /* Barra Lateral Estilo Gemini (Alterna entre Rail de Ícones 68px e Menu 300px) */
@@ -672,57 +702,53 @@ render_html(
         margin-bottom: 0.3rem;
     }
 
-    /* Mensagens do Chat limpas sem caixas pesadas */
+    /* Mensagens do Chat limpas e sólidas no fundo branco */
     div[data-testid="stChatMessage"] {
-        background-color: transparent !important;
+        background-color: #FFFFFF !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 0.75rem 0.25rem !important;
-        margin-bottom: 0.4rem !important;
+        padding: 0.85rem 0.25rem !important;
+        margin-bottom: 0.85rem !important;
+        opacity: 1 !important;
     }
 
-    /* Indicador animado de busca e elaboração da resposta (estilo Gemini) */
-    @keyframes dbvSpin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+    /* Balão destacado e sutil da pergunta do usuário */
+    div[data-testid="stChatMessage"]:has(.dbv-user-marker),
+    div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+        background-color: #F8FAFC !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 16px !important;
+        padding: 0.85rem 1.15rem !important;
+        margin-left: auto !important;
+        max-width: 88% !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     }
-    @keyframes dbvPulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.65; }
+    .dbv-user-marker {
+        display: none !important;
     }
-    .dbv-thinking-box {
-        display: flex;
+
+    /* Indicador fluido e minimalista de pensamento (estilo Gemini) */
+    @keyframes geminiPulse {
+        0%, 100% { opacity: 0.75; transform: scale(0.98); }
+        50% { opacity: 1; transform: scale(1.02); }
+    }
+    .dbv-thinking-pill {
+        display: inline-flex;
         align-items: center;
-        gap: 14px;
-        background: #FFFFFF;
-        border: 1px solid #DBEAFE;
-        border-left: 4px solid #0047AB;
-        border-radius: 12px;
-        padding: 0.85rem 1.1rem;
-        margin: 0.25rem 0 0.6rem 0;
-        box-shadow: 0 2px 8px rgba(0, 71, 171, 0.06);
-        animation: dbvPulse 1.8s ease-in-out infinite;
+        gap: 10px;
+        background: #F0F7FF;
+        border: 1px solid #BAE6FD;
+        border-radius: 999px;
+        padding: 0.35rem 0.95rem;
+        margin: 0.2rem 0 0.6rem 0;
+        font-size: 0.86rem;
+        color: #0369A1;
+        font-weight: 600;
+        animation: geminiPulse 1.8s ease-in-out infinite;
     }
-    .dbv-spinner {
-        width: 22px;
-        height: 22px;
-        border: 3px solid #DBEAFE;
-        border-top: 3px solid #0047AB;
-        border-right: 3px solid #FFD600;
-        border-radius: 50%;
-        flex-shrink: 0;
-        animation: dbvSpin 0.85s linear infinite;
-    }
-    .dbv-thinking-title {
-        font-weight: 700;
-        font-size: 0.92rem;
-        color: #0F172A;
-        line-height: 1.25;
-    }
-    .dbv-thinking-sub {
-        font-size: 0.8rem;
-        color: #64748B;
-        margin-top: 2px;
+    .dbv-thinking-sparkle {
+        font-size: 1rem;
+        color: #0284C7;
     }
 
     /* Card de Fonte Consultada enxuto */
@@ -1659,6 +1685,8 @@ if col_top_pdf is not None:
 for idx, msg in enumerate(st.session_state.mensagens):
     avatar_icone = AVATAR_USER if msg["role"] == "user" else AVATAR_DBV
     with st.chat_message(msg["role"], avatar=avatar_icone):
+        if msg["role"] == "user":
+            st.markdown('<div class="dbv-user-marker"></div>', unsafe_allow_html=True)
         st.markdown(msg["content"])
         if msg.get("trechos"):
             renderizar_fontes(msg["trechos"], exibir_detalhes=cfg_env.exibir_detalhes_tecnicos)
@@ -1741,115 +1769,79 @@ if st.session_state.mensagens and st.session_state.mensagens[-1]["role"] == "use
         placeholder_status = st.empty()
         placeholder_resposta = st.empty()
 
-        # Etapa 1: Feedback imediato de busca nos manuais
-        sub_busca = (
-            "Localizando as páginas e artigos relacionados à sua pergunta"
-            if cfg_env.exibir_detalhes_tecnicos
-            else "Consultando os materiais do Clube de Desbravadores"
-        )
+        # Feedback moderno, rápido e sutil estilo Gemini
         placeholder_status.markdown(
-            '<div class="dbv-thinking-box">'
-            '<div class="dbv-spinner"></div>'
-            '<div>'
-            '<div class="dbv-thinking-title">🔎 A Mara está buscando a sua resposta...</div>'
-            f'<div class="dbv-thinking-sub">{sub_busca}</div>'
-            '</div>'
+            '<div class="dbv-thinking-pill">'
+            '<span class="dbv-thinking-sparkle">✦</span>'
+            '<span>Consultando os manuais oficiais...</span>'
             '</div>',
             unsafe_allow_html=True,
         )
 
         trechos = motor.recuperar(ultima_pergunta, categoria=categoria_filtro)
 
-        # Etapa 2: Feedback visível enquanto o modelo Gemini analisa os trechos (thinking)
-        acao_txt = "A Mara está montando o simulado" if modo_quiz else "A Mara está escrevendo a resposta"
-        if cfg_env.exibir_detalhes_tecnicos:
-            qtd_t = len(trechos)
-            info_t = (
-                " (1 trecho relevante localizado)"
-                if qtd_t == 1
-                else f" ({qtd_t} trechos relevantes localizados)"
-            )
-            sub_geracao = "Verificando páginas e preparando as citações oficiais"
+        # Zero-Token Guard: responde saudações e fora de escopo de forma instantânea sem gastar tokens
+        resposta_zero = motor.verificar_resposta_zero_token(ultima_pergunta, trechos)
+        if resposta_zero is not None and not modo_quiz:
+            placeholder_status.empty()
+            resposta_completa = resposta_zero
+            placeholder_resposta.markdown(resposta_completa)
+            trechos = []
         else:
-            info_t = ""
-            sub_geracao = "Organizando a explicação de um jeito fácil para você"
-
-        placeholder_status.markdown(
-            f'<div class="dbv-thinking-box">'
-            f'<div class="dbv-spinner"></div>'
-            f'<div>'
-            f'<div class="dbv-thinking-title">✨ {acao_txt}{info_t}...</div>'
-            f'<div class="dbv-thinking-sub">{sub_geracao}</div>'
-            f'</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-
-        texto_acumulado = ""
-        try:
-            fluxo = motor.responder_stream(
-                pergunta=ultima_pergunta,
-                trechos=trechos,
-                modo_quiz=modo_quiz,
-                previous_interaction_id=st.session_state.last_interaction_id,
+            acao_txt = "Montando o simulado de estudo..." if modo_quiz else "Organizando a resposta..."
+            placeholder_status.markdown(
+                f'<div class="dbv-thinking-pill">'
+                f'<span class="dbv-thinking-sparkle">✦</span>'
+                f'<span>{acao_txt}</span>'
+                f'</div>',
+                unsafe_allow_html=True,
             )
-            for pedaco in fluxo:
-                if pedaco:
-                    if not texto_acumulado:
-                        placeholder_status.empty()
-                    texto_acumulado += pedaco
-                    placeholder_resposta.markdown(texto_acumulado + " ▌")
-        except Exception:
-            texto_acumulado = ""
 
-        if not texto_acumulado.strip():
+            texto_acumulado = ""
             try:
-                resp = motor.responder(
+                fluxo = motor.responder_stream(
                     pergunta=ultima_pergunta,
-                    categoria=categoria_filtro,
+                    trechos=trechos,
                     modo_quiz=modo_quiz,
                     previous_interaction_id=st.session_state.last_interaction_id,
-                    trechos_pre_recuperados=trechos,
                 )
-                resposta_completa = resp.texto
-                st.session_state.last_interaction_id = resp.interaction_id
+                for pedaco in fluxo:
+                    if pedaco:
+                        if not texto_acumulado:
+                            placeholder_status.empty()
+                        texto_acumulado += pedaco
+                        placeholder_resposta.markdown(texto_acumulado + " ▌")
+            except Exception:
+                texto_acumulado = ""
+
+            if not texto_acumulado.strip():
+                try:
+                    resp = motor.responder(
+                        pergunta=ultima_pergunta,
+                        categoria=categoria_filtro,
+                        modo_quiz=modo_quiz,
+                        previous_interaction_id=st.session_state.last_interaction_id,
+                        trechos_pre_recuperados=trechos,
+                    )
+                    resposta_completa = resp.texto
+                    st.session_state.last_interaction_id = resp.interaction_id
+                    placeholder_status.empty()
+                    placeholder_resposta.markdown(resposta_completa)
+                except Exception as exc_api:
+                    placeholder_status.empty()
+                    resposta_completa = (
+                        f"⚠️ Não foi possível concluir a resposta neste momento (`{exc_api}`). "
+                        "Tente enviar sua pergunta novamente."
+                    )
+                    placeholder_resposta.error(resposta_completa)
+            else:
+                resposta_completa = texto_acumulado
+                if motor.ultimo_interaction_id:
+                    st.session_state.last_interaction_id = motor.ultimo_interaction_id
                 placeholder_status.empty()
                 placeholder_resposta.markdown(resposta_completa)
-            except Exception as exc_api:
-                placeholder_status.empty()
-                resposta_completa = (
-                    f"⚠️ Não foi possível concluir a resposta neste momento (`{exc_api}`). "
-                    "Tente enviar sua pergunta novamente."
-                )
-                placeholder_resposta.error(resposta_completa)
-        else:
-            resposta_completa = texto_acumulado
-            if motor.ultimo_interaction_id:
-                st.session_state.last_interaction_id = motor.ultimo_interaction_id
-            placeholder_status.empty()
-            placeholder_resposta.markdown(resposta_completa)
 
         renderizar_fontes(trechos, exibir_detalhes=cfg_env.exibir_detalhes_tecnicos)
-
-        eh_quiz_novo = modo_quiz or ("<details" in str(resposta_completa).lower())
-        bytes_pdf_novo = gerar_pdf_resposta(
-            pergunta=ultima_pergunta,
-            resposta_md=str(resposta_completa),
-            trechos=trechos,
-            nome_clube=cfg_env.nome_clube,
-            categoria=categoria_filtro,
-            modo_quiz=eh_quiz_novo,
-        )
-        c_up_n, c_down_n, c_pdf_n, _ = st.columns([0.9, 0.9, 2.8, 7.4], vertical_alignment="center")
-        c_pdf_n.download_button(
-            label="📄 Baixar Prova (PDF)" if eh_quiz_novo else "📄 Baixar em PDF",
-            data=bytes_pdf_novo,
-            file_name="simulado_mara.pdf" if eh_quiz_novo else "estudo_mara.pdf",
-            mime="application/pdf",
-            key="dl_pdf_msg_recem_gerada",
-            help="Baixar esta resposta ou simulado em PDF formatado para impressão",
-            use_container_width=True,
-        )
 
     st.session_state.mensagens.append(
         {
@@ -1883,3 +1875,5 @@ if st.session_state.mensagens and st.session_state.mensagens[-1]["role"] == "use
         )
     except Exception:
         pass
+
+    st.rerun()

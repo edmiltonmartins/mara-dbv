@@ -216,6 +216,11 @@ class MotorRAG:
             categoria=categoria,
         )
 
+    def verificar_resposta_zero_token(
+        self, pergunta: str, trechos: list[TrechoRecuperado]
+    ) -> str | None:
+        return verificar_resposta_zero_token(pergunta, trechos)
+
     def responder(
         self,
         pergunta: str,
