@@ -576,129 +576,162 @@ render_html(
         padding-bottom: 1.25rem !important;
     }}
 
-    /* Caixa de Entrada do Chat (stChatInput) com Alto Contraste e Destaque Visual */
-    div[data-testid="stChatInput"] {{
-        max-width: 920px !important;
+    /* =========================================================================
+       COMPOSER INLINE ESTILO GEMINI (SELETOR DE MODO DENTRO DO INPUT, AO LADO DO ENVIAR)
+       ========================================================================= */
+    [class*="st-key-chat_composer_wrapper"] {{
+        position: relative !important;
+        max-width: 940px !important;
         margin: 0 auto !important;
-        padding: 0.3rem 0.25rem 0.5rem 0.25rem !important;
+        display: block !important;
     }}
-    div[data-testid="stChatInput"] > div,
-    div[data-testid="stChatInput"] [data-baseweb="base-input"] {{
+
+    /* Caixa principal do chat_input */
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] {{
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0.25rem 0 0.45rem 0 !important;
+    }}
+
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] > div,
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] [data-baseweb="base-input"] {{
         background-color: #FFFFFF !important;
         background: #FFFFFF !important;
         border: 1.5px solid #94A3B8 !important;
-        border-radius: 20px !important;
+        border-radius: 24px !important;
         box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
-        transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease !important;
-        padding: 0.3rem 0.75rem !important;
+        position: relative !important;
+        padding: 0.35rem 0.75rem !important;
+        padding-right: 92px !important;
+        min-height: 50px !important;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
     }}
-    div[data-testid="stChatInput"] > div:hover,
-    div[data-testid="stChatInput"] [data-baseweb="base-input"]:hover {{
+
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] > div:hover {{
         border-color: #475569 !important;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12) !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.11) !important;
     }}
-    div[data-testid="stChatInput"]:focus-within > div,
-    div[data-testid="stChatInput"] > div:focus-within,
-    div[data-testid="stChatInput"] [data-baseweb="base-input"]:focus-within {{
+
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"]:focus-within > div {{
         border-color: #0047AB !important;
-        box-shadow: 0 0 0 3px rgba(0, 71, 171, 0.2), 0 4px 18px rgba(0, 71, 171, 0.1) !important;
-        background-color: #FFFFFF !important;
+        box-shadow: 0 0 0 3px rgba(0, 71, 171, 0.2), 0 4px 20px rgba(0, 71, 171, 0.1) !important;
     }}
-    div[data-testid="stChatInput"] textarea,
-    textarea[data-testid="stChatInputTextArea"] {{
+
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] textarea,
+    [class*="st-key-chat_composer_wrapper"] textarea[data-testid="stChatInputTextArea"] {{
         color: #0F172A !important;
-        font-size: 0.95rem !important;
+        font-size: 0.96rem !important;
         line-height: 1.48 !important;
-        font-weight: 500 !important;
         caret-color: #0047AB !important;
         background: transparent !important;
+        padding-right: 6px !important;
     }}
-    div[data-testid="stChatInput"] textarea::placeholder,
-    textarea[data-testid="stChatInputTextArea"]::placeholder {{
+
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] textarea::placeholder,
+    [class*="st-key-chat_composer_wrapper"] textarea[data-testid="stChatInputTextArea"]::placeholder {{
         color: #64748B !important;
         font-weight: 500 !important;
         opacity: 1 !important;
     }}
-    div[data-testid="stChatInput"] button,
-    button[data-testid="stChatInputSubmitButton"] {{
+
+    /* Botão de Envio (Enviar) posicionado na extrema direita interna */
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] button,
+    [class*="st-key-chat_composer_wrapper"] button[data-testid="stChatInputSubmitButton"] {{
+        position: absolute !important;
+        right: 9px !important;
+        bottom: 8px !important;
+        width: 35px !important;
+        min-width: 35px !important;
+        height: 35px !important;
+        min-height: 35px !important;
+        border-radius: 50% !important;
         background-color: #0047AB !important;
         color: #FFFFFF !important;
         border: none !important;
-        border-radius: 12px !important;
-        width: 36px !important;
-        min-width: 36px !important;
-        height: 36px !important;
-        min-height: 36px !important;
-        padding: 0 !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         box-shadow: 0 2px 6px rgba(0, 71, 171, 0.28) !important;
-        transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+        z-index: 5 !important;
         cursor: pointer !important;
+        transition: transform 0.15s ease, background-color 0.15s ease !important;
     }}
-    div[data-testid="stChatInput"] button svg,
-    button[data-testid="stChatInputSubmitButton"] svg {{
+
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] button svg,
+    [class*="st-key-chat_composer_wrapper"] button[data-testid="stChatInputSubmitButton"] svg {{
         fill: #FFFFFF !important;
         stroke: #FFFFFF !important;
         color: #FFFFFF !important;
     }}
-    div[data-testid="stChatInput"] button:hover:not(:disabled),
-    button[data-testid="stChatInputSubmitButton"]:hover:not(:disabled) {{
+
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] button:hover:not(:disabled) {{
         background-color: #003380 !important;
         transform: scale(1.06) !important;
-        box-shadow: 0 4px 12px rgba(0, 71, 171, 0.38) !important;
     }}
-    div[data-testid="stChatInput"] button:disabled,
-    button[data-testid="stChatInputSubmitButton"]:disabled {{
+
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] button:disabled {{
         background-color: #E2E8F0 !important;
         opacity: 0.75 !important;
         box-shadow: none !important;
         cursor: not-allowed !important;
     }}
-    div[data-testid="stChatInput"] button:disabled svg,
-    button[data-testid="stChatInputSubmitButton"]:disabled svg {{
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] button:disabled svg {{
         fill: #94A3B8 !important;
         stroke: #94A3B8 !important;
         color: #94A3B8 !important;
     }}
 
-    /* Botão Popover Seletor de Modo (Reduzido para ícone estilo Gemini) */
-    div[data-testid="stPopover"] {{
+    /* Botão Popover do Modo (💬 ou 🎯) posicionado INLINE à esquerda do botão de envio */
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] {{
+        position: absolute !important;
+        right: 50px !important;
+        bottom: 8px !important;
+        z-index: 6 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 35px !important;
         display: inline-flex !important;
         align-items: center !important;
     }}
-    div[data-testid="stPopover"] > button,
-    button[data-testid="stPopoverButton"] {{
-        background: #FFFFFF !important;
-        color: #0F172A !important;
-        border: 1.5px solid #CBD5E1 !important;
-        border-radius: 12px !important;
-        width: 38px !important;
-        min-width: 38px !important;
-        max-width: 38px !important;
-        height: 36px !important;
-        min-height: 36px !important;
+
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] div[data-testid="stPopover"] {{
+        display: inline-flex !important;
+        align-items: center !important;
+        margin: 0 !important;
         padding: 0 !important;
+    }}
+
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] {{
+        width: 35px !important;
+        min-width: 35px !important;
+        max-width: 35px !important;
+        height: 35px !important;
+        min-height: 35px !important;
+        border-radius: 50% !important;
+        background: #F1F5F9 !important;
+        border: 1px solid #CBD5E1 !important;
+        color: #1E293B !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+        box-shadow: none !important;
         transition: all 0.16s ease !important;
     }}
-    div[data-testid="stPopover"] > button:hover,
-    button[data-testid="stPopoverButton"]:hover {{
+
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"]:hover {{
         background: #EFF6FF !important;
         border-color: #0047AB !important;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(0, 71, 171, 0.14) !important;
+        transform: scale(1.06) !important;
+        box-shadow: 0 2px 8px rgba(0, 71, 171, 0.15) !important;
     }}
-    div[data-testid="stPopover"] > button div,
-    div[data-testid="stPopover"] > button p,
-    button[data-testid="stPopoverButton"] p,
-    div[data-testid="stPopover"] > button span,
-    button[data-testid="stPopoverButton"] span {{
-        font-size: 1.22rem !important;
+
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] p,
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] span,
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] div {{
+        font-size: 1.15rem !important;
         line-height: 1 !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -706,6 +739,7 @@ render_html(
         align-items: center !important;
         justify-content: center !important;
     }}
+
     div[data-testid="stPopoverBody"] {{
         background: #FFFFFF !important;
         border: 1px solid #CBD5E1 !important;
@@ -1131,21 +1165,42 @@ def renderizar_fontes(trechos: list[TrechoRecuperado], exibir_detalhes: bool = F
             )
 
 
-def renderizar_seletor_modo_compacto(key_sufixo: str = "bottom") -> None:
-    """Menu seletor compacto para Consulta vs Simulado, reduzindo apenas para o ícone ativo."""
+def renderizar_composer_inline(
+    key_sufixo: str,
+    key_input: str,
+    modo_quiz: bool,
+) -> str | None:
+    """Renderiza a caixa do chat estilo Gemini com seletor de modo inline ao lado do botão de envio."""
     eh_quiz = st.session_state.modo_chat == "🎯 Simulado / Quiz"
     icone_atual = "🎯" if eh_quiz else "💬"
     nome_atual = "Simulado / Quiz" if eh_quiz else "Consulta"
 
-    c_pop, c_escopo, _ = st.columns([0.65, 3.8, 5.55], vertical_alignment="center")
-    with c_pop:
+    if st.session_state.categoria_ativa != "TODAS":
+        c_esc, _ = st.columns([0.45, 0.55], vertical_alignment="center")
+        with c_esc:
+            if st.button(
+                f"📂 Escopo: {st.session_state.categoria_ativa} ✕",
+                key=f"btn_limpar_escopo_{key_sufixo}",
+                help="Clique para remover o filtro e pesquisar em todos os manuais",
+            ):
+                st.session_state.categoria_ativa = "TODAS"
+                st.rerun()
+
+    texto_placeholder = (
+        "Digite o tema para a Mara montar o simulado..."
+        if modo_quiz
+        else "Pergunte à Mara sobre classes, especialidades, nós..."
+    )
+
+    with st.container(key=f"chat_composer_wrapper_{key_sufixo}"):
         with st.popover(
             icone_atual,
-            help=f"Modo: {nome_atual}. Clique para alternar entre Consulta e Simulado.",
+            help=f"Modo da Mara: {nome_atual}. Clique para alternar entre Consulta e Simulado.",
+            key=f"popover_modo_inline_{key_sufixo}",
             use_container_width=False,
         ):
             st.markdown("##### ⚙️ Modo de Resposta")
-            st.caption("Escolha como a Mara deve responder:")
+            st.caption("Escolha como a Mara deve interagir com você:")
             escolha = st.radio(
                 "Modo da Mara",
                 options=["💬 Consulta", "🎯 Simulado / Quiz"],
@@ -1157,15 +1212,12 @@ def renderizar_seletor_modo_compacto(key_sufixo: str = "bottom") -> None:
                 st.session_state.modo_chat = escolha
                 st.rerun()
 
-    with c_escopo:
-        if st.session_state.categoria_ativa != "TODAS":
-            if st.button(
-                f"📂 Escopo: {st.session_state.categoria_ativa} ✕",
-                key=f"btn_limpar_escopo_{key_sufixo}",
-                help="Clique para remover o filtro e pesquisar em todos os manuais",
-            ):
-                st.session_state.categoria_ativa = "TODAS"
-                st.rerun()
+        texto_digitado = st.chat_input(
+            texto_placeholder,
+            key=key_input,
+        )
+
+    return texto_digitado
 
 
 def iniciar_nova_conversa(ir_para_chat: bool = True) -> None:
@@ -1751,18 +1803,12 @@ if not st.session_state.mensagens:
         """
     )
 
-    # Barra de chat centralizada logo abaixo da saudação (inline por estar dentro de st.container)
-    with st.container():
-        renderizar_seletor_modo_compacto(key_sufixo="home")
-        texto_placeholder_home = (
-            "Digite o tema para a Mara montar o simulado..."
-            if (st.session_state.modo_chat == "🎯 Simulado / Quiz")
-            else "Pergunte à Mara sobre classes, especialidades, nós..."
-        )
-        entrada_chat = st.chat_input(
-            texto_placeholder_home,
-            key="chat_input_principal_fixo",
-        )
+    # Barra de chat centralizada inline estilo Gemini com seletor de modo embutido
+    entrada_chat = renderizar_composer_inline(
+        key_sufixo="home",
+        key_input="chat_input_principal_fixo",
+        modo_quiz=modo_quiz,
+    )
 
     st.write("")
     c1, c2 = st.columns(2)
@@ -1882,15 +1928,10 @@ for idx, msg in enumerate(st.session_state.mensagens):
 # ==================== COMPOSER INFERIOR (QUANDO JÁ HÁ HISTÓRICO) ====================
 bottom_container = st.bottom if hasattr(st, "bottom") else st._bottom
 with bottom_container:
-    renderizar_seletor_modo_compacto(key_sufixo="bottom")
-    texto_placeholder_bottom = (
-        "Digite o tema para a Mara montar o simulado..."
-        if modo_quiz
-        else "Pergunte à Mara sobre classes, especialidades, nós..."
-    )
-    entrada_chat = st.chat_input(
-        texto_placeholder_bottom,
-        key="chat_input_conversa_bottom",
+    entrada_chat = renderizar_composer_inline(
+        key_sufixo="bottom",
+        key_input="chat_input_conversa_bottom",
+        modo_quiz=modo_quiz,
     )
 
 if entrada_chat:
