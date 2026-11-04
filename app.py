@@ -586,11 +586,16 @@ render_html(
         display: block !important;
     }}
 
+    [class*="st-key-chat_composer_wrapper"] > div {{
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+
     /* Caixa principal do chat_input */
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] {{
         width: 100% !important;
         margin: 0 !important;
-        padding: 0.25rem 0 0.45rem 0 !important;
+        padding: 0 !important;
     }}
 
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] > div,
@@ -642,8 +647,10 @@ render_html(
         bottom: 8px !important;
         width: 35px !important;
         min-width: 35px !important;
+        max-width: 35px !important;
         height: 35px !important;
         min-height: 35px !important;
+        max-height: 35px !important;
         border-radius: 50% !important;
         background-color: #0047AB !important;
         color: #FFFFFF !important;
@@ -654,6 +661,10 @@ render_html(
         box-shadow: 0 2px 6px rgba(0, 71, 171, 0.28) !important;
         z-index: 5 !important;
         cursor: pointer !important;
+        box-sizing: border-box !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
         transition: transform 0.15s ease, background-color 0.15s ease !important;
     }}
 
@@ -662,6 +673,8 @@ render_html(
         fill: #FFFFFF !important;
         stroke: #FFFFFF !important;
         color: #FFFFFF !important;
+        width: 18px !important;
+        height: 18px !important;
     }}
 
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] button:hover:not(:disabled) {{
@@ -686,38 +699,57 @@ render_html(
         position: absolute !important;
         right: 50px !important;
         bottom: 8px !important;
+        width: 35px !important;
+        min-width: 35px !important;
+        max-width: 35px !important;
+        height: 35px !important;
+        min-height: 35px !important;
+        max-height: 35px !important;
         z-index: 6 !important;
         margin: 0 !important;
         padding: 0 !important;
-        height: 35px !important;
-        display: inline-flex !important;
+        display: flex !important;
         align-items: center !important;
+        justify-content: center !important;
     }}
 
-    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] div[data-testid="stPopover"] {{
-        display: inline-flex !important;
-        align-items: center !important;
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] div[data-testid="stPopover"],
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] div[data-testid="stPopover"] > div {{
+        width: 35px !important;
+        min-width: 35px !important;
+        max-width: 35px !important;
+        height: 35px !important;
+        min-height: 35px !important;
+        max-height: 35px !important;
         margin: 0 !important;
         padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
 
+    /* O botão circular em si: perfeitamente delimitado com overflow hidden */
     [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] {{
         width: 35px !important;
         min-width: 35px !important;
         max-width: 35px !important;
         height: 35px !important;
         min-height: 35px !important;
+        max-height: 35px !important;
         border-radius: 50% !important;
         background: #F1F5F9 !important;
         border: 1px solid #CBD5E1 !important;
         color: #1E293B !important;
-        display: inline-flex !important;
+        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         padding: 0 !important;
         margin: 0 !important;
         cursor: pointer !important;
         box-shadow: none !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        position: relative !important;
         transition: all 0.16s ease !important;
     }}
 
@@ -728,16 +760,49 @@ render_html(
         box-shadow: 0 2px 8px rgba(0, 71, 171, 0.15) !important;
     }}
 
-    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] p,
-    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] span,
-    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] div {{
-        font-size: 1.15rem !important;
-        line-height: 1 !important;
-        margin: 0 !important;
-        padding: 0 !important;
+    /* Container flex interno gerado pelo emotion/Streamlit */
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] > div {{
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        overflow: hidden !important;
+    }}
+
+    /* Ocultar rigorosamente chevron / seta / SVG do popover para sobrar APENAS o ícone circular */
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] [aria-hidden="true"],
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] [class*="ecfxx9g2"],
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] svg,
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] span[class*="e1vmumty"] {{
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }}
+
+    /* Centralização perfeita e dimensões controladas do emoji/texto */
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] div[data-testid="stMarkdownContainer"],
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] div[data-testid="stMarkdownContainer"] p,
+    [class*="st-key-chat_composer_wrapper"] [class*="st-key-popover_modo_inline"] button[data-testid="stPopoverButton"] p {{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 1.05rem !important;
+        line-height: 1 !important;
+        text-align: center !important;
+        user-select: none !important;
     }}
 
     div[data-testid="stPopoverBody"] {{
