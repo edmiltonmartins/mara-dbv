@@ -354,15 +354,16 @@ render_html(
         --dbv-vermelho: #FF1300;
     }}
 
-    /* Fundo clean claro estilo Gemini (Branco Puro e Solido) */
-    .stApp,
-    [data-testid="stAppViewContainer"],
-    section.main,
-    div.stMainBlockContainer,
-    div[data-testid="stVerticalBlock"] {{
+    /* Fundo clean claro estilo Gemini (Branco Puro apenas na área principal) */
+    .stApp {{
         background-color: #FFFFFF !important;
         cursor: default;
         caret-color: transparent;
+    }}
+    section[data-testid="stMain"],
+    section.main,
+    div.stMainBlockContainer {{
+        background-color: #FFFFFF !important;
     }}
 
     /* Formato geral amplo com respiro inferior generoso para o chat */
@@ -372,21 +373,14 @@ render_html(
         padding-bottom: 9.5rem !important;
     }}
 
-    /* Desativa completamente o efeito fantasma / opacidade reduzida do Streamlit durante o rerun */
-    [data-stale="true"],
-    [data-stale="true"] *,
-    .stChatMessage,
+    /* Desativa o efeito fantasma / opacidade reduzida do Streamlit nas mensagens durante o rerun */
+    section[data-testid="stMain"] [data-stale="true"],
+    section.main [data-stale="true"],
     div[data-testid="stChatMessage"],
-    div[data-testid="stChatMessage"] *,
-    [data-testid="stAppViewBlockContainer"],
-    .element-container,
-    div[data-testid="stVerticalBlock"] > div {{
+    div[data-testid="stChatMessage"] * {{
         opacity: 1 !important;
         filter: none !important;
         transition: none !important;
-    }}
-    [data-testid="stBlock"] > div[style*="opacity"] {{
-        opacity: 1 !important;
     }}
 
     /* Oculta a barra superior vazia do Streamlit, botões nativos de colapso e badges */
@@ -618,9 +612,14 @@ render_html(
         overflow-x: hidden !important;
         overscroll-behavior: contain;
     }}
+    section[data-testid="stSidebar"] [data-testid="stSidebarContent"],
     section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"],
     section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div,
-    section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] {{
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"],
+    section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"],
+    section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div {{
+        background-color: transparent !important;
+        background: transparent !important;
         width: 100% !important;
         min-width: 0 !important;
         max-width: 100% !important;
