@@ -11,6 +11,7 @@ import base64
 import html
 import io
 import sys
+import time
 import uuid
 from pathlib import Path
 
@@ -1110,6 +1111,35 @@ def obter_device_id_navegador(repo_ref=None) -> str:
                 ajustarInterface();
                 setTimeout(ajustarInterface, 300);
                 setTimeout(ajustarInterface, 900);
+
+                if (!pWin._mara_popover_listener_attached) {{
+                    pWin._mara_popover_listener_attached = true;
+                    doc.addEventListener("click", function(e) {{
+                        const radioLabel = e.target.closest('[data-testid="stRadio"] label, [data-baseweb="radio"], [data-testid="stRadio"] input');
+                        if (!radioLabel) return;
+                        const popoverBody = radioLabel.closest('[data-testid="stPopoverBody"]');
+                        if (popoverBody) {{
+                            setTimeout(() => {{
+                                doc.dispatchEvent(new KeyboardEvent("keydown", {{key: "Escape", code: "Escape", keyCode: 27, which: 27, bubbles: true}}));
+                                doc.querySelectorAll('button[data-testid="stPopoverButton"][aria-expanded="true"]').forEach(b => b.click());
+                                const focar = () => {{
+                                    const ta = doc.querySelector('textarea[data-testid="stChatInputTextArea"], [class*="st-key-chat_composer_wrapper"] textarea');
+                                    if (ta) {{
+                                        ta.focus();
+                                        const len = ta.value.length;
+                                        ta.setSelectionRange(len, len);
+                                        return true;
+                                    }}
+                                    return false;
+                                }};
+                                focar();
+                                setTimeout(focar, 60);
+                                setTimeout(focar, 160);
+                                setTimeout(focar, 320);
+                            }}, 60);
+                        }}
+                    }}, true);
+                }}
             }} catch (e) {{}}
             </script>
             """,
@@ -1275,12 +1305,45 @@ def renderizar_composer_inline(
             )
             if escolha != st.session_state.modo_chat:
                 st.session_state.modo_chat = escolha
+                st.session_state._deve_focar_chat = True
                 st.rerun()
 
         texto_digitado = st.chat_input(
             texto_placeholder,
             key=key_input,
         )
+
+        if st.session_state.get("_deve_focar_chat"):
+            st.session_state._deve_focar_chat = False
+            components.html(
+                f"""
+                <script>
+                try {{
+                    const doc = window.parent.document;
+                    doc.querySelectorAll('button[data-testid="stPopoverButton"][aria-expanded="true"]').forEach(b => b.click());
+                    doc.dispatchEvent(new KeyboardEvent("keydown", {{key: "Escape", code: "Escape", keyCode: 27, which: 27, bubbles: true}}));
+
+                    const focar = () => {{
+                        const ta = doc.querySelector('textarea[data-testid="stChatInputTextArea"], [class*="st-key-chat_composer_wrapper"] textarea');
+                        if (ta) {{
+                            ta.focus();
+                            const valLen = ta.value.length;
+                            ta.setSelectionRange(valLen, valLen);
+                            return true;
+                        }}
+                        return false;
+                    }};
+                    focar();
+                    setTimeout(focar, 50);
+                    setTimeout(focar, 150);
+                    setTimeout(focar, 320);
+                }} catch (e) {{}}
+                </script>
+                <!-- trigger: {time.time()} -->
+                """,
+                height=0,
+                width=0,
+            )
 
     return texto_digitado
 
