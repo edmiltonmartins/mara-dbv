@@ -12,6 +12,7 @@ import json
 import math
 import re
 import sqlite3
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -20,8 +21,15 @@ import numpy as np
 
 from .chunking import Chunk
 from .config import RAIZ, Config
+from .embeddings import radical_pt
 
 RRF_K = 60  # constante padrão de Reciprocal Rank Fusion
+
+
+def _remover_selo_cabecalho(texto: str) -> str:
+    if texto.startswith("[") and "]\n" in texto:
+        return texto.split("]\n", 1)[1].strip()
+    return texto.strip()
 
 
 def filtrar_trechos_relevantes(
@@ -42,19 +50,18 @@ def filtrar_trechos_relevantes(
     for idx, t in enumerate(recorte):
         tem_lexical = t.score_rrf > limiar_rrf_lexical
         # Descarta trechos sem match lexical e com similaridade muito baixa
-        if not tem_lexical and t.similaridade < 0.45:
+        if not tem_lexical and t.similaridade < 0.38:
             continue
 
         if tem_algum_lexical:
-            # Se há trechos que batem nos termos da pergunta, mantém quem tem match lexical
-            # com similaridade mínima aceitável ou quem tem similaridade semântica muito próxima do topo
-            if tem_lexical and (idx == 0 or t.similaridade >= 0.45):
+            # Se o trecho bate nos termos da pergunta (match lexical RRF), mantém com limiar vetorial flexível
+            if tem_lexical and (idx == 0 or t.similaridade >= 0.20):
                 relevantes.append(t)
-            elif not tem_lexical and t.similaridade >= max(0.66, melhor_sim - 0.05):
+            elif not tem_lexical and t.similaridade >= max(0.62, melhor_sim - 0.06):
                 relevantes.append(t)
         else:
             # Consulta puramente conceitual (sem palavras exatas): mantém apenas a faixa de topo
-            if t.similaridade >= 0.50 and t.similaridade >= melhor_sim - 0.05:
+            if t.similaridade >= 0.45 and t.similaridade >= melhor_sim - 0.06:
                 relevantes.append(t)
 
     # Se pelo menos o 1º colocado tinha cara de resposta válida (>= 0.48 ou match lexical), garante retorno
@@ -116,6 +123,8 @@ def serializar_mensagens(mensagens: list[dict]) -> str:
             "content": m.get("content", ""),
             "pergunta": m.get("pergunta", ""),
         }
+        if m.get("quiz"):
+            item["quiz"] = m["quiz"]
         trechos = m.get("trechos") or []
         item["trechos"] = [
             {
@@ -156,14 +165,15 @@ def desserializar_mensagens(mensagens_json: str) -> list[dict]:
             )
             for t in (m.get("trechos") or [])
         ]
-        saida.append(
-            {
-                "role": m.get("role", "user"),
-                "content": m.get("content", ""),
-                "pergunta": m.get("pergunta", ""),
-                "trechos": trechos,
-            }
-        )
+        msg_out: dict = {
+            "role": m.get("role", "user"),
+            "content": m.get("content", ""),
+            "pergunta": m.get("pergunta", ""),
+            "trechos": trechos,
+        }
+        if m.get("quiz"):
+            msg_out["quiz"] = m["quiz"]
+        saida.append(msg_out)
     return saida
 
 
@@ -549,6 +559,7 @@ class SqliteRepositorio:
     def __init__(self, caminho_db: Path | None = None) -> None:
         self.caminho_db = caminho_db or (RAIZ / "data" / "chatdbv_local.sqlite")
         self.caminho_db.parent.mkdir(parents=True, exist_ok=True)
+        self._cache_chunks: tuple[list[tuple], np.ndarray, list[str]] | None = None
 
     def _conectar(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.caminho_db))
@@ -649,6 +660,7 @@ class SqliteRepositorio:
                 """,
                 registros,
             )
+            self._cache_chunks = None
             return manual_id
 
     def listar_manuais(self) -> list[ManualInfo]:
@@ -679,6 +691,7 @@ class SqliteRepositorio:
     def remover_manual(self, manual_id: int) -> None:
         with self._conectar() as conn:
             conn.execute("DELETE FROM manuais WHERE id = ?", (manual_id,))
+        self._cache_chunks = None
 
     def listar_chunks_manual(self, manual_id: int, limite: int = 30) -> list[Chunk]:
         with self._conectar() as conn:
@@ -694,93 +707,226 @@ class SqliteRepositorio:
             )
             return [Chunk(pagina=int(r[0]), ordem=int(r[1]), texto=r[2]) for r in cur.fetchall()]
 
+    def _carregar_indice_em_memoria(self) -> tuple[list[tuple], np.ndarray, list[str], dict[tuple[int, int], tuple[int, str]]]:
+        if self._cache_chunks is not None:
+            return self._cache_chunks
+        sql = """
+            SELECT c.id, m.titulo, m.arquivo, c.categoria, c.pagina, c.texto, c.embedding, c.manual_id, c.ordem
+            FROM chunks c
+            JOIN manuais m ON m.id = c.manual_id
+        """
+        with self._conectar() as conn:
+            brutas = conn.execute(sql).fetchall()
+        if not brutas:
+            vazio = ([], np.zeros((0, 768), dtype=np.float32), [], {})
+            self._cache_chunks = vazio
+            return vazio
+
+        metas = [(r[0], r[1], r[2], r[3], r[4], r[5], int(r[7]), int(r[8])) for r in brutas]
+        mat = np.asarray([json.loads(r[6]) for r in brutas], dtype=np.float32)
+        textos_norm = [
+            "".join(
+                ch
+                for ch in unicodedata.normalize("NFKD", f"{r[1]} \n {r[5]}".lower())
+                if not unicodedata.combining(ch)
+            )
+            for r in brutas
+        ]
+        mapa_ordem = {(int(r[7]), int(r[8])): (int(r[4]), str(r[5])) for r in brutas}
+        self._cache_chunks = (metas, mat, textos_norm, mapa_ordem)
+        return self._cache_chunks
+
     def buscar_hibrido(
         self,
         vetor_consulta: np.ndarray,
         texto_consulta: str,
-        top_k: int = 6,
+        top_k: int = 8,
         categoria: str | None = None,
     ) -> list[TrechoRecuperado]:
         filtro_cat = categoria if (categoria and categoria != "TODAS") else None
-        sql = """
-            SELECT c.id, m.titulo, m.arquivo, c.categoria, c.pagina, c.texto, c.embedding
-            FROM chunks c
-            JOIN manuais m ON m.id = c.manual_id
-        """
-        params: tuple = ()
-        if filtro_cat:
-            sql += " WHERE c.categoria = ?"
-            params = (filtro_cat,)
-
-        with self._conectar() as conn:
-            linhas = conn.execute(sql, params).fetchall()
-
-        if not linhas:
+        metas_todas, mat_todas, norm_todas, mapa_ordem = self._carregar_indice_em_memoria()
+        if not metas_todas:
             return []
+
+        if filtro_cat:
+            idxs = [i for i, m in enumerate(metas_todas) if m[3] == filtro_cat]
+            if not idxs:
+                return []
+            linhas = [metas_todas[i] for i in idxs]
+            mat = mat_todas[idxs]
+            textos_lower = [norm_todas[i] for i in idxs]
+        else:
+            linhas = metas_todas
+            mat = mat_todas
+            textos_lower = norm_todas
 
         q_vec = np.asarray(vetor_consulta, dtype=np.float32)
         q_norm = np.linalg.norm(q_vec)
         if q_norm > 0:
             q_vec = q_vec / q_norm
 
-        termos = [
-            t
-            for t in re.findall(r"[a-zA-Zà-úÀ-Ú0-9]{3,}", texto_consulta.lower())
-            if t not in {"que", "qual", "quais", "como", "para", "dos", "das", "nos", "nas", "uma", "por"}
+        consulta_norm = "".join(
+            ch
+            for ch in unicodedata.normalize("NFKD", texto_consulta.lower())
+            if not unicodedata.combining(ch)
+        )
+        paginas_pedidas = [
+            int(p) for p in re.findall(r"\bpag(?:ina)?s?\.?\s*(\d{1,3})\b", consulta_norm)
         ]
 
-        sims: list[float] = []
+        stopwords = {
+            "que", "qual", "quais", "como", "para", "dos", "das", "nos", "nas",
+            "uma", "por", "com", "sobre", "segundo", "pelo", "pela", "sao", "tem",
+            "manual", "clube", "desbravador", "desbravadores", "dsa", "entao",
+            "forma", "correta", "deve", "fazer", "falar", "dizer", "traga", "toda",
+        }
+        termos = [
+            t
+            for t in re.findall(r"[a-z0-9]{2,}", consulta_norm)
+            if t not in stopwords
+            and (len(t) >= 3 or re.fullmatch(r"(?:d[1-4]|l[1-4]|lm|vi)", t))
+        ]
+
+        sims_arr = mat @ q_vec
+        sims = [float(x) for x in sims_arr]
+
         scores_lex: list[float] = []
         termos_unicos = list(dict.fromkeys(termos))
-        textos_lower = [linha[5].lower() for linha in linhas]
+        radicais_unicos = list(
+            dict.fromkeys(radical_pt(t) for t in termos_unicos if len(radical_pt(t)) >= 4)
+        )
         n_docs = len(linhas)
         idf = {
             t: math.log((n_docs + 1) / (sum(1 for txt in textos_lower if t in txt) + 1)) + 1.0
             for t in termos_unicos
         }
-        bigramas = [f"{termos_unicos[k]} {termos_unicos[k + 1]}" for k in range(len(termos_unicos) - 1)]
+        idf_rad = {
+            r: math.log((n_docs + 1) / (sum(1 for txt in textos_lower if r in txt) + 1)) + 1.0
+            for r in radicais_unicos
+        }
+        bigramas = [
+            f"{termos_unicos[k]} {termos_unicos[k + 1]}"
+            for k in range(len(termos_unicos) - 1)
+        ]
+        pares_radicais = [
+            (radicais_unicos[k], radicais_unicos[k + 1])
+            for k in range(len(radicais_unicos) - 1)
+        ]
 
-        for idx_linha, linha in enumerate(linhas):
-            emb = np.asarray(json.loads(linha[6]), dtype=np.float32)
-            sims.append(float(np.dot(emb, q_vec)))
+        for idx_linha in range(n_docs):
             texto_lower = textos_lower[idx_linha]
             score_l = 0.0
             for t in termos_unicos:
                 cnt = texto_lower.count(t)
                 if cnt > 0:
                     score_l += idf[t] * (1.0 + 0.25 * min(cnt, 4))
+            for rad in radicais_unicos:
+                cnt_r = texto_lower.count(rad)
+                if cnt_r > 0:
+                    score_l += idf_rad[rad] * 0.85 * (1.0 + 0.20 * min(cnt_r, 4))
             for bg in bigramas:
                 if bg in texto_lower:
-                    score_l += 2.0
+                    score_l += 2.5
+            for r1, r2 in pares_radicais:
+                if r1 in texto_lower and r2 in texto_lower:
+                    score_l += 1.8
             scores_lex.append(score_l)
 
-        ordem_sem = sorted(range(len(linhas)), key=lambda i: sims[i], reverse=True)
+        ordem_sem = sorted(range(n_docs), key=lambda i: sims[i], reverse=True)
         rank_sem = {idx: pos + 1 for pos, idx in enumerate(ordem_sem)}
 
         indices_com_match = [i for i, sc in enumerate(scores_lex) if sc > 0]
         ordem_lex = sorted(indices_com_match, key=lambda i: scores_lex[i], reverse=True)
         rank_lex = {idx: pos + 1 for pos, idx in enumerate(ordem_lex)}
 
-        resultados: list[TrechoRecuperado] = []
+        candidatos_meta: list[tuple[TrechoRecuperado, int, int]] = []
         for i, linha in enumerate(linhas):
             rrf = 1.0 / (RRF_K + rank_sem[i])
             if i in rank_lex:
                 rrf += 1.0 / (RRF_K + rank_lex[i])
-            resultados.append(
-                TrechoRecuperado(
-                    chunk_id=int(linha[0]),
-                    manual_titulo=linha[1],
-                    arquivo=linha[2],
-                    categoria=linha[3],
-                    pagina=int(linha[4]),
-                    texto=linha[5],
-                    similaridade=sims[i],
-                    score_rrf=rrf,
+                if linha[5].startswith("[NORMA ATUALIZADORA OFICIAL DSA"):
+                    rrf *= 1.10
+            # Penaliza páginas de Sumário (pontilhados longos .......) para priorizar o conteúdo real
+            if "........" in linha[5]:
+                rrf *= 0.25
+            # Impulso explícito quando o usuário cita número de página ("página 127")
+            if paginas_pedidas:
+                pag_chunk = int(linha[4])
+                if pag_chunk in paginas_pedidas:
+                    rrf += 0.12
+                elif any(abs(pag_chunk - p) == 1 for p in paginas_pedidas):
+                    rrf += 0.03
+
+            candidatos_meta.append(
+                (
+                    TrechoRecuperado(
+                        chunk_id=int(linha[0]),
+                        manual_titulo=linha[1],
+                        arquivo=linha[2],
+                        categoria=linha[3],
+                        pagina=int(linha[4]),
+                        texto=linha[5],
+                        similaridade=sims[i],
+                        score_rrf=rrf,
+                    ),
+                    int(linha[6]),
+                    int(linha[7]),
                 )
             )
 
-        resultados.sort(key=lambda r: (r.score_rrf, r.similaridade), reverse=True)
-        return filtrar_trechos_relevantes(resultados, top_k=top_k)
+        candidatos_meta.sort(key=lambda item: (item[0].score_rrf, item[0].similaridade), reverse=True)
+        apenas_trechos = [item[0] for item in candidatos_meta]
+        filtrados = filtrar_trechos_relevantes(apenas_trechos, top_k=top_k)
+        if not filtrados:
+            return []
+
+        mapa_id_coord = {item[0].chunk_id: (item[1], item[2]) for item in candidatos_meta}
+        ordens_consumidas = {mapa_id_coord[t.chunk_id] for t in filtrados if t.chunk_id in mapa_id_coord}
+
+        # Costura vizinhos imediatos (ordem - 1 e ordem + 1) nos 3 primeiros resultados
+        # para que diálogos, cerimônias e listas em páginas longas nunca sejam cortados na metade
+        enriquecidos: list[TrechoRecuperado] = []
+        for pos, trecho in enumerate(filtrados):
+            coord = mapa_id_coord.get(trecho.chunk_id)
+            if pos < 3 and coord is not None:
+                man_id, ord_atual = coord
+                partes_txt: list[str] = []
+                viz_ant = mapa_ordem.get((man_id, ord_atual - 1))
+                if (
+                    viz_ant
+                    and (man_id, ord_atual - 1) not in ordens_consumidas
+                    and abs(viz_ant[0] - trecho.pagina) <= 1
+                    and "........" not in viz_ant[1]
+                ):
+                    ordens_consumidas.add((man_id, ord_atual - 1))
+                    partes_txt.append(_remover_selo_cabecalho(viz_ant[1]))
+
+                partes_txt.append(trecho.texto)
+
+                viz_pos = mapa_ordem.get((man_id, ord_atual + 1))
+                if (
+                    viz_pos
+                    and (man_id, ord_atual + 1) not in ordens_consumidas
+                    and abs(viz_pos[0] - trecho.pagina) <= 1
+                    and "........" not in viz_pos[1]
+                ):
+                    ordens_consumidas.add((man_id, ord_atual + 1))
+                    partes_txt.append(_remover_selo_cabecalho(viz_pos[1]))
+
+                if len(partes_txt) > 1:
+                    trecho = TrechoRecuperado(
+                        chunk_id=trecho.chunk_id,
+                        manual_titulo=trecho.manual_titulo,
+                        arquivo=trecho.arquivo,
+                        categoria=trecho.categoria,
+                        pagina=trecho.pagina,
+                        texto="\n\n".join(partes_txt),
+                        similaridade=trecho.similaridade,
+                        score_rrf=trecho.score_rrf,
+                    )
+            enriquecidos.append(trecho)
+
+        return enriquecidos
 
     def registrar_feedback(self, pergunta: str, resposta: str, positivo: bool) -> None:
         with self._conectar() as conn:

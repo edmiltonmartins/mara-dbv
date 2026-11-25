@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import re
 import time
+import unicodedata
 from typing import Literal
 
 import numpy as np
@@ -26,20 +27,71 @@ def normalizar(vetor: list[float] | np.ndarray) -> np.ndarray:
     return v / norma if norma > 0 else v
 
 
+_SINONIMOS_DOMINIO_DBV: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("gema", "gemas", "verso", "versos", "versiculo", "versiculos", "biblico", "biblicos", "biblia", "decorar"), "gemas versos versiculos biblicos descoberta espiritual memorizar"),
+    (("casamento", "noivo", "noiva", "teto", "honra", "cerimonia"), "casamento noivos guarda honra teto aco omd 009"),
+    (("idade", "idades", "aniversario", "corte", "ingresso"), "idades corte etario aniversario ano civil omd 011"),
+    (("livro", "livros", "leitura"), "livros leitura clube livro juvenil omd 021"),
+    (("calma", "autismo", "autista", "tea", "tdah", "neurodivergente", "girassol", "inclusao"), "espaco calma map inclusao cordao girassol tea"),
+    (("rud", "gala", "caqui", "insignia", "insignias", "bolso", "manga"), "rud regulamento uniforme gala insignias bolsos mangas"),
+    (("arganel", "prendedor", "lenco"), "lenco arganel prendedor"),
+    (("sabado", "desfile", "civico", "7 de setembro"), "desfile sabado civico omd 004"),
+    (("apresentar", "apresentacao", "abertura", "comando", "silvos", "apito"), "civismo abertura reuniao capitao apresenta unidade diretor senhor logo vem permissao entrar forma"),
+)
+
+_SUFIXOS_PT = (
+    "acoes", "acao", "amentos", "amento", "idades", "idade", "mente",
+    "arem", "erem", "irem", "ando", "endo", "indo", "aram", "eram", "iram",
+    "adas", "ados", "ada", "ado", "avas", "avam", "ava", "iam", "ias",
+    "oes", "aes", "ais", "eis", "ois", "ores", "oras", "or",
+    "ar", "er", "ir", "am", "em", "os", "as", "es", "a", "o", "e",
+)
+
+
+def radical_pt(palavra: str) -> str:
+    """Extrai radical morfológico leve em português (ex.: apresentar/apresentação/apresentam -> apresent)."""
+    if len(palavra) <= 4:
+        return palavra
+    for suf in _SUFIXOS_PT:
+        if palavra.endswith(suf) and len(palavra) - len(suf) >= 4:
+            return palavra[: -len(suf)]
+    return palavra[:6]
+
+
+def _sem_acentos(texto: str) -> str:
+    nfkd = unicodedata.normalize("NFKD", texto.lower())
+    return "".join(ch for ch in nfkd if not unicodedata.combining(ch))
+
+
 def _vetor_hashing_local(texto: str, dimensao: int = 768) -> np.ndarray:
-    """Vetorizador local 768d (unigramas + bigramas + trigramas de caracteres em PT-BR).
-    Usado automaticamente caso uma chave Vertex AI Express Mode (AQ...) não tenha
-    permissão para o endpoint :predict de embeddings sem um projeto GCP."""
+    """Vetorizador denso 768d com normalização sem acentos, radicais morfológicos PT-BR,
+    n-gramas de subpalavras e expansão semântica de sinônimos do domínio Desbravadores."""
     v = np.zeros(dimensao, dtype=np.float32)
-    palavras = re.findall(r"[a-zà-ú0-9]{2,}", texto.lower())
+    limpo = _sem_acentos(texto)
+
+    # Expansão de sinônimos do domínio DSA para aproximar vocabulário coloquial do texto normativo
+    expansoes: list[str] = []
+    for gatilhos, termos_exp in _SINONIMOS_DOMINIO_DBV:
+        if any(g in limpo for g in gatilhos):
+            expansoes.append(termos_exp)
+    if expansoes:
+        limpo = f"{limpo} {' '.join(expansoes)}"
+
+    palavras = re.findall(r"[a-z0-9]{2,}", limpo)
     features: list[tuple[str, float]] = []
     for i, p in enumerate(palavras):
-        features.append((f"w:{p}", 2.0))
+        peso_palavra = 2.6 if re.fullmatch(r"(?:d[1-4]|l[1-4]|lm|lma|omd|rud|sgc|dsa|\d{3})", p) else 2.0
+        rad = radical_pt(p)
+        features.append((f"w:{p}", peso_palavra))
+        if len(rad) >= 4:
+            features.append((f"st:{rad}", 1.85))
         if i + 1 < len(palavras):
-            features.append((f"b:{p}_{palavras[i + 1]}", 2.5))
+            rad_next = radical_pt(palavras[i + 1])
+            features.append((f"b:{p}_{palavras[i + 1]}", 2.4))
+            features.append((f"sb:{rad}_{rad_next}", 2.1))
         if len(p) >= 4:
             for j in range(len(p) - 2):
-                features.append((f"c:{p[j : j + 3]}", 0.5))
+                features.append((f"c:{p[j : j + 3]}", 0.40))
 
     for token, peso in features:
         digest = hashlib.blake2b(token.encode("utf-8"), digest_size=8).digest()
@@ -60,7 +112,8 @@ class Embedder:
     def __init__(self, cfg: Config, client: genai.Client | None = None) -> None:
         self.cfg = cfg
         self.client = client or criar_cliente_genai(cfg)
-        self.usando_fallback_local = bool(cfg.usa_vertex_express)
+        chave_aq = (cfg.gemini_api_key or "").strip().upper().startswith("AQ.")
+        self.usando_fallback_local = bool(cfg.usa_vertex_express or chave_aq)
 
     def _embed_lote(self, textos: list[str], tarefa: TipoTarefa) -> list[np.ndarray]:
         if self.usando_fallback_local:

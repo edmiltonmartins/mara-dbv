@@ -29,3 +29,12 @@ data/*.db
 ._*
 Thumbs.db
 *.log
+
+# Aplicativo Web / PWA / Capacitor (Mara v2.0)
+web/node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+web/tsconfig.tsbuildinfo
+web/android/
+web/ios/

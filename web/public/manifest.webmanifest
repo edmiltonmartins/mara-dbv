@@ -1,0 +1,28 @@
+{
+  "id": "/",
+  "name": "Mara — IA dos Desbravadores",
+  "short_name": "Mara DBV",
+  "description": "Instrutora virtual oficial fundamentada nos manuais da DSA (RUD, Classes, Administração), simulados interativos e Biblioteca Offline para acampamento.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#010440",
+  "lang": "pt-BR",
+  "categories": ["education", "reference"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

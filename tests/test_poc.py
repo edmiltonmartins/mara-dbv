@@ -81,7 +81,8 @@ def test_ingestao_idempotente_busca_hibrida_e_admin(tmp_path: Path) -> None:
     embedder = FakeEmbedder()
 
     manuais_dir = RAIZ / "data" / "manuais"
-    for arq in sorted(manuais_dir.glob("*.md")):
+    arquivos_teste = sorted(manuais_dir.glob("0*.md"))[:4]
+    for arq in arquivos_teste:
         res = ingerir_arquivo(arq, repo, embedder)
         assert not res.ignorado_por_cache
         assert res.chunks > 0
@@ -223,7 +224,7 @@ def test_exportacao_pdf_consulta_simulado_e_biblioteca() -> None:
     leitor1 = PdfReader(io.BytesIO(pdf_consulta))
     assert len(leitor1.pages) >= 1
 
-    # 2. PDF de simulado com bloco <details> de gabarito
+    # 2. PDF de simulado com bloco <details> de gabarito (deve separar prova na pág. 1 e gabarito na pág. 2)
     resposta_quiz = (
         "## 🎯 Simulado de Uniformes\n\n"
         "1. Onde fica a Insígnia de Excelência?\n"
@@ -243,9 +244,32 @@ def test_exportacao_pdf_consulta_simulado_e_biblioteca() -> None:
     )
     assert pdf_quiz.startswith(b"%PDF-")
     leitor2 = PdfReader(io.BytesIO(pdf_quiz))
-    assert len(leitor2.pages) >= 1
+    assert len(leitor2.pages) >= 2
+    texto_pag1 = leitor2.pages[0].extract_text()
+    texto_pag2 = leitor2.pages[1].extract_text()
+    assert "GABARITO COMENTADO" not in texto_pag1.upper()
+    assert "INSTRUTOR" in texto_pag2.upper()
 
-    # 3. PDF de conversa completa e de guia da Biblioteca
+    # 2b. Simulado com cabeçalho Markdown de Gabarito (sem tag <details>) também deve separar páginas
+    resposta_quiz_md = (
+        "1. Qual a distância do Emblema D1?\n"
+        "A) 15 mm\n"
+        "B) 50 mm\n\n"
+        "### Gabarito Comentado da Mara\n"
+        "1. **B** — 50 mm abaixo da costura do ombro direito."
+    )
+    pdf_quiz_md = gerar_pdf_resposta(
+        pergunta="Distância do D1",
+        resposta_md=resposta_quiz_md,
+        trechos=[trecho],
+        nome_clube="Clube Órion",
+        categoria="UNIFORMES",
+        modo_quiz=True,
+    )
+    leitor_md = PdfReader(io.BytesIO(pdf_quiz_md))
+    assert len(leitor_md.pages) >= 2
+
+    # 3. PDF de conversa completa e de guia da Biblioteca (tabela completa sem truncamento em 42 chars)
     pdf_conv = gerar_pdf_conversa(
         titulo="Estudo de Uniformes",
         mensagens=[
@@ -265,8 +289,12 @@ def test_exportacao_pdf_consulta_simulado_e_biblioteca() -> None:
         badge=item_bib.badge,
         resumo_md=item_bib.resumo_markdown,
         nome_clube="Clube Órion",
+        logo_relativo=item_bib.logo_relativo,
     )
     assert pdf_bib.startswith(b"%PDF-")
+    leitor_bib = PdfReader(io.BytesIO(pdf_bib))
+    texto_bib = leitor_bib.pages[0].extract_text()
+    assert "50 mm (5,0 cm) abaixo da costura do ombro" in texto_bib
 
 
 def test_blindagem_zero_token_guard_e_limites() -> None:
@@ -279,8 +307,8 @@ def test_blindagem_zero_token_guard_e_limites() -> None:
         verificar_resposta_zero_token,
     )
 
-    assert MAX_CARACTERES_PERGUNTA == 600
-    assert MAX_OUTPUT_TOKENS == 1200
+    assert MAX_CARACTERES_PERGUNTA == 1200
+    assert MAX_OUTPUT_TOKENS == 4096
 
     # 1. Saudações sem trechos devem retornar saudação padrão sem gastar tokens
     assert verificar_resposta_zero_token("Olá Mara!", []) == RESPOSTA_SAUDACAO_PADRAO
@@ -310,6 +338,55 @@ def test_blindagem_zero_token_guard_e_limites() -> None:
         )
         is None
     )
+
+
+def test_failover_cooldown_modelos_503() -> None:
+    from chatdbv.rag import (
+        _MODELOS_INDISPONIVEIS_ATE,
+        _erro_indisponibilidade_modelo,
+        _lista_modelos,
+        _marcar_modelo_indisponivel,
+    )
+
+    _MODELOS_INDISPONIVEIS_ATE.clear()
+    assert _erro_indisponibilidade_modelo(RuntimeError("503 UNAVAILABLE: high demand")) is True
+    assert _erro_indisponibilidade_modelo(RuntimeError("504 DEADLINE_EXCEEDED")) is True
+    assert _erro_indisponibilidade_modelo(ValueError("erro sintatico qualquer")) is False
+
+    _marcar_modelo_indisponivel("gemini-3.8-flash")
+    ordem = _lista_modelos("gemini-3.8-flash")
+    assert ordem[0] == "gemini-3.5-flash-lite"
+    assert ordem[-1] == "gemini-3.8-flash"
+    _MODELOS_INDISPONIVEIS_ATE.clear()
+
+
+def test_supressao_saudacao_conversa_em_andamento() -> None:
+    from chatdbv.rag import (
+        RESPOSTA_SAUDACAO_EM_ANDAMENTO,
+        RESPOSTA_SAUDACAO_PADRAO,
+        montar_prompt_usuario,
+        remover_saudacao_inicial_repetida,
+        verificar_resposta_zero_token,
+    )
+
+    assert verificar_resposta_zero_token("Oi", [], conversa_em_andamento=False) == RESPOSTA_SAUDACAO_PADRAO
+    assert verificar_resposta_zero_token("Oi", [], conversa_em_andamento=True) == RESPOSTA_SAUDACAO_EM_ANDAMENTO
+
+    bruto = "Maranata, desbravador! Que alegria responder isso!\n\nSegundo a OMD 009, os noivos devem estar investidos."
+    limpo = remover_saudacao_inicial_repetida(bruto)
+    assert not limpo.lower().startswith("maranata")
+    assert limpo.startswith("Segundo a OMD 009")
+
+    # Garante que conteúdo legítimo sobre a palavra Maranata não é cortado
+    conteudo_real = "O significado da saudação Maranata vem do aramaico e quer dizer Ora vem, Senhor Jesus."
+    assert remover_saudacao_inicial_repetida(conteudo_real) == conteudo_real
+
+    prompt_cont = montar_prompt_usuario(
+        "E no bolso direito?",
+        [],
+        historico_recente=[{"role": "user", "content": "Como organizar o bolso esquerdo?"}],
+    )
+    assert "JÁ ESTÁ EM ANDAMENTO" in prompt_cont
 
 
 

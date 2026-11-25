@@ -221,4 +221,76 @@ CATALOGO_BIBLIOTECA: list[ItemBiblioteca] = [
         pergunta_consulta="Explique as etapas das vozes de comando na Ordem Unida e as regras de civismo e hasteamento de bandeiras nos manuais da DSA.",
         tema_simulado="Gere um simulado sobre Ordem Unida, vozes de comando e protocolo de bandeiras.",
     ),
+
+    # ==================== OMDs VIGENTES, GEMAS BÍBLICAS, LIDERANÇA & CAMPORI ====================
+    ItemBiblioteca(
+        id="omds_vigentes_atualizacoes",
+        titulo="OMDs Vigentes (001 a 021/2024) e Orientações 2026",
+        subtitulo="Resumo rápido das retificações oficiais da DSA: idades, casamento, desfile no sábado, livros e SGC.",
+        categoria="ADMINISTRATIVO",
+        logo_relativo="D1/JPG/D1.jpg",
+        badge="Normas Vigentes",
+        resumo_markdown="""
+| Norma Oficial DSA | Regra Vigente no Clube |
+| :--- | :--- |
+| **OMD 004 (Desfile no Sábado)** | É vedada participação em desfiles cívicos/militares no sábado; exceções estritas seguem orientação pastoral/missional sem banda marcial competitiva. |
+| **OMD 009 (Uniforme em Casamento)** | Regulamenta o uso do Uniforme de Gala pelos noivos investidos e pela Guarda de Honra / Teto de Aço. |
+| **OMD 011 (Corte de Idades)** | Define a regra oficial de idade por ano civil/aniversário para ingresso aos 10 anos e classes regulares. |
+| **OMD 019/2023 (Coordenador SGC)** | Regulamenta a função de Coordenador do Sistema de Gerenciamento de Clubes na Associação/Missão. |
+| **OMD 020/2024 (Nomes de Clubes)** | Estabelece critérios bíblicos, naturais e históricos permitidos e nomes vedados para batizar clubes. |
+| **OMD 021/2024 (Livros das Classes)** | Atualiza oficialmente os livros de leitura das classes regulares e de liderança. |
+| **Orientações 2026 & Espaço da Calma** | Protocolo MAP/MDA de inclusão sensorial, acolhimento neurodivergente e uso de cordões oficiais. |
+""",
+        pergunta_consulta="Quais são as principais determinações das OMDs vigentes da DSA (como OMD 004, OMD 009, OMD 011, OMD 020/2024, OMD 021/2024) e das Orientações 2026?",
+        tema_simulado="Regras atualizadas pelas OMDs da DSA (idades, uniforme em casamento, desfile no sábado, livros das classes e nomes de clubes)",
+    ),
+    ItemBiblioteca(
+        id="classes_gemas_versiculos_biblicos",
+        titulo="Textos e Gemas Bíblicas das 6 Classes (Amigo a Guia)",
+        subtitulo="Referência rápida de bolso dos capítulos e versículos exigidos em Descoberta Espiritual.",
+        categoria="CLASSES",
+        logo_relativo="Classes/b6_guia.png",
+        badge="Descoberta Espiritual",
+        resumo_markdown="""
+- **Amigo (10 anos):** Criação, 10 Pragas, 12 Tribos, 39 livros do Antigo Testamento; versos como *Salmo 23*, *Êxodo 20:3-17*, *João 3:16*, *Filipenses 4:13*.
+- **Companheiro (11 anos):** 27 livros do Novo Testamento; *Mateus 5:3-12 (Bem-Aventuranças)*, *Isaías 41:9-10*, *Provérbios 22:6*, *Salmo 8*.
+- **Pesquisador (12 anos):** *Eclesiastes 12:1*, *João 3:1-21*, *Isaías 1:18*, *Salmo 51:10*, *Salmo 19*.
+- **Pioneiro (13 anos):** *1 Pedro 1:24-25*, *1 Reis 18:21*, *Mateus 24:37-39*, *Romanos 12:1-2*, *Apocalipse 1:3*.
+- **Excursionista (14 anos):** *Romanos 8:28*, *Apocalipse 21:1-3*, *2 Pedro 1:20-21*, *1 João 2:14*, *2 Crônicas 20:20*, *Salmo 46*.
+- **Guia (15 anos):** *1 Coríntios 13*, *2 Crônicas 7:14*, *Apocalipse 22:18-20*, *2 Timóteo 4:6-7*, *Romanos 8:38-39*, *Mateus 6:33-34* + 3 Mensagens Angélicas (*Ap 14:6-12*), 7 Igrejas e 12 Fundamentos da Nova Jerusalém.
+""",
+        pergunta_consulta="Liste os textos bíblicos, capítulos e gemas de memorização exigidos na seção Descoberta Espiritual dos cartões de Amigo até Guia.",
+        tema_simulado="Textos bíblicos, doutrinas e seção Descoberta Espiritual das Classes Regulares (Amigo a Guia)",
+    ),
+    ItemBiblioteca(
+        id="lideranca_lider_lm_lma",
+        titulo="Trilha de Liderança: Líder, Líder Master e LMA",
+        subtitulo="Requisitos progressivos para maiores de 16/18 anos, validade de cartões (OMD 006) e Mestrados.",
+        categoria="CLASSES",
+        logo_relativo="L1/globo-lider-desbravador.jpg",
+        badge="Liderança DSA",
+        resumo_markdown="""
+- **Líder de Desbravadores:** Início aos 16 anos (investidura aos 18+), membro batizado, concluir as 6 classes regulares (ou Cartão Agrupado), Curso de Treinamento de Diretoria (CTD 10h+), Ano Bíblico Jovem e atuação ativa na diretoria.
+- **Líder Master (LM):** Pré-requisito de ser Líder investido, conclusão de Mestrados de especialidades, direção/instrução prática e leitura de livros do Espírito de Profecia.
+- **Líder Master Avançado (LMA):** Pré-requisito de Líder Master, capacitação de líderes regionais, pesquisa/produção técnica e avaliação conforme Recomendações Oficiais LMA da DSA.
+- **Validade (OMD 006 e OMD 014):** Atenção aos prazos regulamentares de conclusão e assinatura da coordenação regional/campo.
+""",
+        pergunta_consulta="Quais são os requisitos oficiais e regras das OMDs para as classes de Líder, Líder Master (LM) e Líder Master Avançado (LMA)?",
+        tema_simulado="Requisitos dos cartões de Líder, Líder Master, Líder Master Avançado e regras das OMDs 002, 006, 013 e 014",
+    ),
+    ItemBiblioteca(
+        id="campori_dsa_2027_guia",
+        titulo="VI Campori Sul-Americano DSA 2027 — Orientações e Boletins",
+        subtitulo="Regras gerais de inscrição, requisitos prévios do clube, pontuação e boletins oficiais 2026.",
+        categoria="CAMPORI",
+        logo_relativo="D2/JPG/D2.jpg",
+        badge="Campori DSA 2027",
+        resumo_markdown="""
+- **Documentos Oficiais Indexados:** *Manual de Orientações VI Campori DSA 2027*, *Manual de Eventos* e *Boletins Oficiais Nº 01/2026 e Nº 02/2026*.
+- **Preparação do Clube:** Cadastro e seguro anual em dia no SGC, cumprimento dos pré-requisitos comunitários, espirituais e administrativos nos prazos de cada etapa, padronização do uniforme e estrutura de cozinha/área de acampamento.
+- **Acessibilidade:** Estrutura oficial de acolhimento (*Espaço da Calma MAP/MDA*) para desbravadores com necessidades sensoriais.
+""",
+        pergunta_consulta="Quais são as principais orientações, datas, eventos e regras dos Boletins Oficiais 2026 para o VI Campori Sul-Americano da DSA 2027?",
+        tema_simulado="Manual de Orientações e Boletins Oficiais do VI Campori Sul-Americano da DSA 2027",
+    ),
 ]

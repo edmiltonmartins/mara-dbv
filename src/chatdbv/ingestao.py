@@ -1,11 +1,13 @@
-"""Pipeline de ingestão de documentos (PDF, Markdown, TXT) para o Chat DBV."""
+"""Pipeline de ingestão de documentos (PDF, Markdown, TXT) com suporte a
+precedência normativa de OMDs (Orientações do Ministério de Desbravadores) e Camporis."""
 from __future__ import annotations
 
 import hashlib
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .chunking import dividir_documento, extrair_paginas
+from .chunking import Chunk, dividir_documento, extrair_paginas
 from .db import RepositorioRAG
 from .embeddings import Embedder
 
@@ -15,16 +17,18 @@ CATEGORIAS_VALIDAS = (
     "CLASSES",
     "ADMINISTRATIVO",
     "ESPECIALIDADES",
+    "CAMPORI",
     "GERAL",
 )
 
 ROTULOS_CATEGORIAS = {
-    "TODAS": "Todas as Categorias",
+    "TODAS": "Todos os Manuais",
     "HISTORIA_IDEAIS": "História, Ideais e Emblemas",
     "UNIFORMES": "Regulamento de Uniformes (DSA)",
     "CLASSES": "Classes Regulares e Liderança",
     "ADMINISTRATIVO": "Manual Administrativo & Ordem Unida",
     "ESPECIALIDADES": "Especialidades e Mestrados",
+    "CAMPORI": "Campori Sul-Americano & Eventos DSA",
     "GERAL": "Geral / Outros",
 }
 
@@ -49,27 +53,105 @@ def calcular_sha256(caminho: Path) -> str:
 
 def inferir_categoria(nome_arquivo: str) -> str:
     nome = nome_arquivo.lower()
-    if any(p in nome for p in ("uniforme", "insignia", "insígnia", "gala", "lenço", "lenco")):
-        return "UNIFORMES"
-    if any(p in nome for p in ("classe", "amigo", "companheiro", "pesquisador", "pioneiro", "excursionista", "guia", "lider", "líder")):
-        return "CLASSES"
-    if any(p in nome for p in ("especialidade", "mestrado")):
+    if any(p in nome for p in ("campori", "camporí", "boletim")):
+        return "CAMPORI"
+    if any(p in nome for p in ("especialidade", "mestrado", "biosseguranca", "biossegurança", "omd_017", "omd-17")):
         return "ESPECIALIDADES"
-    if any(p in nome for p in ("administrativo", "ordem_unida", "diretoria", "unidade", "seguranca")):
+    if any(p in nome for p in ("rud", "uniforme", "insignia", "insígnia", "gala", "lenço", "lenco", "casamento", "departamental")):
+        return "UNIFORMES"
+    if any(
+        p in nome
+        for p in (
+            "classe",
+            "cartao",
+            "cartão",
+            "cartoes",
+            "cartões",
+            "amigo",
+            "companheiro",
+            "pesquisador",
+            "pioneiro",
+            "excursionista",
+            "guia_exploracao",
+            "classe_guia",
+            "classes",
+            "lider",
+            "líder",
+            "_idades",
+            "omd_001",
+            "omd_002",
+            "omd_005",
+            "omd_006",
+            "omd_007",
+            "omd_011",
+            "omd_013",
+            "omd_014",
+            "omd_015",
+            "omd_021",
+            "omd021",
+            "gemas",
+        )
+    ):
+        return "CLASSES"
+    if any(
+        p in nome
+        for p in (
+            "administrativo",
+            "ordem_unida",
+            "ordem-unida",
+            "diretoria",
+            "unidade",
+            "seguranca",
+            "sgc",
+            "sabado",
+            "sábado",
+            "nomes_de_clubes",
+            "nomes-de-clubes",
+            "espaco_da_calma",
+            "espaco-da-calma",
+            "orientacoes",
+            "orientações",
+            "fundando_clube",
+            "omd_003",
+            "omd_004",
+            "omd_010",
+            "omd_012",
+            "omd_016",
+            "omd_018",
+            "omd_019",
+            "omd_020",
+        )
+    ):
         return "ADMINISTRATIVO"
-    if any(p in nome for p in ("historia", "história", "ideais", "voto", "hino", "triangulo")):
+    if any(p in nome for p in ("historia", "história", "ideais", "voto", "hino", "triangulo", "simbolos", "símbolos", "joias", "pathfinder")):
         return "HISTORIA_IDEAIS"
     return "GERAL"
 
 
+def eh_norma_atualizadora(nome_arquivo: str, titulo: str) -> bool:
+    comb = f"{nome_arquivo} {titulo}".lower()
+    return bool(
+        re.search(r"\bomd[\s_\-]?\d+", comb)
+        or "retifica" in comb
+        or "orientacoes_2026" in comb
+        or "orientações para desbravadores e aventureiros 2026" in comb
+    )
+
+
 def formatar_titulo(caminho: Path) -> str:
     nome = caminho.stem
-    # Remove prefixos numéricos como "01_"
     partes = nome.split("_")
     if partes and partes[0].isdigit():
         partes = partes[1:]
     titulo = " ".join(partes).replace("-", " ").strip()
-    return titulo.title() if titulo else caminho.stem
+    # Preserva siglas oficiais em caixa alta
+    palavras = []
+    for p in titulo.split():
+        if p.upper() in {"DSA", "OMD", "RUD", "SGC", "MDA", "MAP", "LMA", "LM", "VI", "UCB"}:
+            palavras.append(p.upper())
+        else:
+            palavras.append(p.capitalize())
+    return " ".join(palavras) if palavras else caminho.stem
 
 
 def ingerir_arquivo(
@@ -99,6 +181,16 @@ def ingerir_arquivo(
     chunks = dividir_documento(paginas)
     if not chunks:
         raise ValueError(f"Nenhum texto extraído do arquivo '{nome_relativo}'.")
+
+    # Carimba normas retificadoras (OMDs / Diretrizes 2026) ou contexto do manual em cada chunk
+    if eh_norma_atualizadora(nome_relativo, tit):
+        selo = f"[NORMA ATUALIZADORA OFICIAL DSA — {tit}: prevalece sobre edições anteriores]\n"
+    else:
+        selo = f"[{tit}]\n"
+    chunks = [
+        Chunk(pagina=c.pagina, ordem=c.ordem, texto=f"{selo}{c.texto}")
+        for c in chunks
+    ]
 
     vetores = embedder.documentos([c.texto for c in chunks])
     repo.salvar_manual_com_chunks(

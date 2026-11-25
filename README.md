@@ -1,81 +1,61 @@
-# ⛺ Chat DBV — PoC RAG (Clube de Desbravadores - DSA)
+# Mara v2.0 — IA dos Desbravadores (Infinito Soft · DSA)
 
-Prova de Conceito (PoC) do **Chat DBV**, um consultor e repositório inteligente baseado em **RAG (Retrieval-Augmented Generation)** para o Clube de Desbravadores na Divisão Sul-Americana (DSA / Brasil).
+Instrutora virtual oficial, geradora de simulados interativos e biblioteca de campo fundamentada nos manuais da **Divisão Sul-Americana (DSA)** para o Clube de Desbravadores.
 
-Projetado desde o primeiro dia para validar a ingestão de manuais, a busca híbrida (**Semântica + Full-Text Search com Reciprocal Rank Fusion**) e a precisão das citações antes da migração para **Java (Spring Boot + Spring AI) + Angular**, compartilhando o mesmo esquema **PostgreSQL + `pgvector`**.
-
----
-
-## 📂 Estrutura do Projeto
-
-```text
-chat-dbv/
-├── app.py                      # Interface Web interativa (Streamlit) com Chat, Filtro, Upload e Modo Quiz
-├── docker-compose.yml          # PostgreSQL 17 + pgvector pronto para subir
-├── requirements.txt            # Dependências Python (google-genai >= 2.25, psycopg3, pgvector, pypdf)
-├── .env.example                # Modelo de configuração de ambiente
-├── sql/
-│   └── 001_init.sql            # Esquema oficial PostgreSQL + pgvector (HNSW) + tsvector (PT-BR)
-├── data/
-│   └── manuais/                # Base de conhecimento inicial (Ideais, Uniformes, Classes, Administrativo)
-├── scripts/
-│   └── ingest.py               # CLI de ingestão e indexação idempotente (SHA-256)
-├── src/chatdbv/
-│   ├── config.py               # Leitura e validação de variáveis (.env)
-│   ├── chunking.py             # Extração de PDF/MD preservando fronteiras de página
-│   ├── embeddings.py           # Cliente gemini-embedding-001 (768d normalizado)
-│   ├── db.py                   # Repositório Híbrido (PostgreSQL+pgvector e fallback SQLite+NumPy)
-│   ├── ingestao.py             # Pipeline de ingestão com detecção automática de categoria
-│   └── rag.py                  # Orquestrador RAG com Interactions API (gemini-3.8-flash + streaming)
-└── tests/
-    └── test_poc.py             # Testes automatizados (pytest)
-```
+Desenvolvida pela **Infinito Soft** com arquitetura **API-First Stateless (`FastAPI` + SSE)** + **Aplicativo Web / PWA Offline (`Next.js Static Export` + `React 19` + `TypeScript`)** e suporte nativo para lojas móveis via **Capacitor (`Android` / `iOS`)**.
 
 ---
 
-## 🚀 Como Executar no Windows (PowerShell)
+## Arquitetura Mara v2.0
 
-### 1. Configurar a Chave da API Gemini (`GEMINI_API_KEY`)
+- **`src/chatdbv/` (Núcleo RAG & PDF Editorial):**
+  - Busca híbrida (**Embeddings Gemini 768d + BM25/IDF + Reciprocal Rank Fusion**) com suporte transparente a `PostgreSQL + pgvector` ou `SQLite + NumPy`.
+  - **Zero-Token Guard:** intercepta saudações e perguntas fora de escopo em `< 5 ms` sem consumir tokens da API Gemini.
+  - **Simulado Estruturado JSON (`gerar_quiz_estruturado`):** gera questões de múltipla escolha tipadas com explicação fundamentada no manual e página.
+  - **Motor Editorial PDF (`pdf_export.py`):** gera apostilas, cadernos de estudo e provas oficiais com linhas vetoriais de cabeçalho, bolhas de marcação `○`, tabelas multilinha proporcionais e **Folha do Instrutor (Gabarito Comentado)** separada automaticamente na Página 2.
+- **`src/mara_api/` (API Stateless FastAPI + Uvicorn):**
+  - Streaming em tempo real via **Server-Sent Events (`POST /api/chat/stream`)**.
+  - Simulado interativo (`POST /api/quiz/generate`), Biblioteca Oficial (`GET /api/library`), exportação PDF (`/api/pdf/*`) e Painel da Diretoria protegido por cookie `HttpOnly` assinado (`HMAC-SHA256`) e rate-limiting em memória.
+  - Serve diretamente o bundle estático compilado de `web/out` na porta `8501`.
+- **`web/` (App Web, PWA "Modo Acampamento Offline" & Capacitor):**
+  - Design editorial anti-slop alinhado ao Design System **Infinito Soft × Taste Skill** (`IBM Plex Sans` + `IBM Plex Mono`, superfície neutra clara, *equal edges*, alvos de toque `44px`).
+  - **Composer Inline estilo Gemini** com retorno instantâneo de foco ao campo de texto.
+  - **Modo Acampamento Offline (`sw.js` + `localStorage`):** mantém a Biblioteca do Conselheiro e os estudos recentes acessíveis no celular mesmo sem sinal de internet.
+  - **`capacitor.config.ts`:** pronto para empacotar `.aab` (Google Play) e `.ipa` (App Store).
 
-Obtenha uma chave gratuita no [Google AI Studio](https://aistudio.google.com/apikey).
+---
 
-No PowerShell, dentro da pasta `chat-dbv`, execute o comando abaixo (a digitação ficará oculta por segurança e salvará direto no arquivo `.env`):
+## Como Executar Localmente (Windows PowerShell)
+
+### 1. Compilar o Aplicativo Web (primeira vez ou após alterar `web/`)
 
 ```powershell
-$sec = Read-Host "Digite sua GEMINI_API_KEY" -AsSecureString; $plain = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec)); Add-Content -Path "c:\Users\Edmilton Junior\Documents\GeminiFiles\chat-dbv\.env" -Value "GEMINI_API_KEY=$plain"; Write-Output "Chave salva em .env com sucesso!"
+cd web
+npm install
+npm run build
+cd ..
 ```
 
-### 2. Escolher o Banco de Dados
-
-A PoC funciona em **dois modos automáticos**:
-
-- **Modo A — Zero-Config Local (Imediato):**
-  Se `DATABASE_URL` estiver vazio no `.env`, o sistema usa automaticamente `data/chatdbv_local.sqlite` com busca vetorial via NumPy + RRF. Ideal para testar em 10 segundos sem instalar banco.
-- **Modo B — PostgreSQL + `pgvector` (Docker, Supabase ou Neon):**
-  Adicione no `.env`:
-  ```env
-  DATABASE_URL=postgresql://dbv:dbv_secret@localhost:5432/chatdbv
-  ```
-  *(Se tiver Docker instalado, basta rodar `docker compose up -d`).*
-
-### 3. Iniciar a Interface Web do Chat DBV
+### 2. Iniciar o Servidor Unificado (API + App PWA na porta `8501`)
 
 ```powershell
-.\.venv\Scripts\streamlit.exe run app.py
+$env:PYTHONPATH = "src"
+.\.venv\Scripts\uvicorn.exe mara_api.main:app --host 127.0.0.1 --port 8501
 ```
 
-Na primeira abertura (ou clicando em **"🔄 Indexar pasta data/manuais/"** na barra lateral), os 4 manuais de referência da DSA já incluídos serão indexados automaticamente. Você também pode enviar novos arquivos `.pdf`, `.md` ou `.txt` diretamente pelo painel lateral!
+Acesse `http://localhost:8501` no navegador.
+
+### 3. Executar a Suíte de Testes Automatizados
+
+```powershell
+.\.venv\Scripts\pytest.exe
+```
 
 ---
 
-## 🔄 Como será a Migração para Java (Spring Boot) + Angular?
+## Build em Container Docker (Multi-Stage)
 
-Como o esquema [`sql/001_init.sql`](./sql/001_init.sql) já cria as tabelas `manuais`, `chunks` (com `vector(768)` e `tsvector`) e `feedback` no PostgreSQL:
-
-1. **Zero re-ingestão:** Todos os PDFs já processados e vetorizados na PoC permanecem prontos no PostgreSQL.
-2. **Backend Java (Spring Boot 3.4+ / Spring AI):**
-   - Conecta ao mesmo banco `chatdbv`.
-   - Usa o mesmo modelo `gemini-embedding-001` (`outputDimensionality = 768`) e executa a mesma query híbrida RRF via `JdbcClient` / `NamedParameterJdbcTemplate`.
-   - Expõe endpoints REST (`/api/manuais`, `/api/chat/stream` via `SseEmitter` / `Flux<String>`).
-3. **Frontend Angular:**
-   - Consome o endpoint SSE de streaming e o painel de upload de manuais.
+```powershell
+docker build -t infinito-mara-app:2.0 .
+docker run --rm -p 8501:8501 --env-file .env infinito-mara-app:2.0
+```

@@ -100,8 +100,20 @@ def carregar_logo_data_uri(
 URI_D1 = carregar_logo_data_uri("D1/Imagem 005.jpg", remover_fundo_branco_externo=True, altura_max=140)
 URI_LIDER = carregar_logo_data_uri("L1/globo-lider-desbravador.jpg", remover_fundo_branco_externo=True, altura_max=140)
 
+CAMINHO_LOGO_INFINITO_SVG = RAIZ / "assets" / "logos" / "infinito-logo-vetorial-dark.svg"
+URI_INFINITO = (
+    f"data:image/svg+xml;base64,{base64.b64encode(CAMINHO_LOGO_INFINITO_SVG.read_bytes()).decode('ascii')}"
+    if CAMINHO_LOGO_INFINITO_SVG.exists()
+    else ""
+)
+
+CAMINHO_AVATAR_D1_PNG = RAIZ / "assets" / "logos" / "emblema_d1_triangulo.png"
 CAMINHO_AVATAR_D1 = PASTA_LOGOS / "D1" / "Imagem 005.jpg"
-AVATAR_DBV = str(CAMINHO_AVATAR_D1) if CAMINHO_AVATAR_D1.exists() else (str(CAMINHO_SVG_D1) if CAMINHO_SVG_D1.exists() else "🔺")
+AVATAR_DBV = (
+    str(CAMINHO_AVATAR_D1_PNG)
+    if CAMINHO_AVATAR_D1_PNG.exists()
+    else (str(CAMINHO_AVATAR_D1) if CAMINHO_AVATAR_D1.exists() else (str(CAMINHO_SVG_D1) if CAMINHO_SVG_D1.exists() else "🔺"))
+)
 CAMINHO_AVATAR_USER = PASTA_LOGOS / "Classes" / "b6_guia.png"
 AVATAR_USER = str(CAMINHO_AVATAR_USER) if CAMINHO_AVATAR_USER.exists() else "🧣"
 
@@ -344,34 +356,76 @@ _css_botoes_sidebar = (
     """
 )
 
-# ==================== CSS MINIMALISTA ESTILO GEMINI ====================
+# ==================== DESIGN SYSTEM EDITORIAL (TASTE SKILL + INFINITO SOFT) ====================
 render_html(
     f"""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
     :root {{
-        --dbv-azul: #0047AB;
-        --dbv-petroleo: #005C8A;
-        --dbv-ouro: #FFD600;
-        --dbv-vermelho: #FF1300;
+        --p-bg: #FFFFFF;
+        --p-surface: #F3F5F8;
+        --p-surface-subtle: #F8FAFC;
+        --p-ink: #010440;
+        --p-body: #1E293B;
+        --p-muted: #4F6289;
+        --p-action: #0D6A8A;
+        --p-action-hover: #084E67;
+        --p-line: rgba(1, 4, 64, 0.10);
+        --p-line-strong: rgba(1, 4, 64, 0.22);
+        --dbv-azul: #0D6A8A;
+        --dbv-petroleo: #084E67;
+        --dbv-ouro: #D97706;
+        --dbv-vermelho: #B91C1C;
+        --r-lg: 20px;
+        --r-md: 12px;
+        --r-sm: 8px;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+        --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+        --font-sans: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }}
 
-    /* Fundo clean claro estilo Gemini (Branco Puro apenas na área principal) */
-    .stApp {{
-        background-color: #FFFFFF !important;
+    /* Tipografia e superfície neutra (92% neutra, contraste >= 7:1 no texto principal) */
+    html, body, .stApp {{
+        font-family: var(--font-sans) !important;
+        background-color: var(--p-bg) !important;
+        color: var(--p-body);
         cursor: default;
         caret-color: transparent;
+        -webkit-font-smoothing: antialiased;
+    }}
+    .stApp h1, .stApp h2, .stApp h3, .stApp h4 {{
+        font-family: var(--font-sans) !important;
+        color: var(--p-ink) !important;
+        letter-spacing: -0.025em;
+    }}
+    .stApp code, .stApp pre {{
+        font-family: var(--font-mono) !important;
     }}
     section[data-testid="stMain"],
     section.main,
     div.stMainBlockContainer {{
-        background-color: #FFFFFF !important;
+        background-color: var(--p-bg) !important;
     }}
 
-    /* Formato geral amplo com respiro inferior generoso para o chat */
+    /* Equal Edges: mesma coluna exata (960px) para Hero, Composer e Grid de Cards */
     div.stMainBlockContainer {{
-        max-width: 1080px !important;
-        padding-top: 1rem !important;
+        max-width: 960px !important;
+        padding-top: 1.25rem !important;
         padding-bottom: 9.5rem !important;
+        padding-left: clamp(1.25rem, 3vw, 2.5rem) !important;
+        padding-right: clamp(1.25rem, 3vw, 2.5rem) !important;
+    }}
+
+    /* Anel de foco acessível imediato (system.md Access) */
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    [role="tab"]:focus-visible {{
+        outline: 2px solid var(--p-action) !important;
+        outline-offset: 2px !important;
     }}
 
     /* Desativa o efeito fantasma / opacidade reduzida do Streamlit nas mensagens durante o rerun */
@@ -443,21 +497,21 @@ render_html(
     textarea,
     div[data-testid="stChatInput"] textarea {{
         cursor: text !important;
-        caret-color: #0047AB !important;
+        caret-color: var(--p-action) !important;
         user-select: text !important;
         -webkit-user-select: text !important;
     }}
 
-    /* Barra superior discreta quando já há conversa */
+    /* Barra superior discreta com fio de 1px quando já há conversa */
     .dbv-topbar {{
         display: flex;
         align-items: safe center;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: 0.5rem;
-        padding: 0.4rem 0 0.85rem 0;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid #E2E8F0;
+        gap: 0.75rem;
+        padding: 0.35rem 0 0.85rem 0;
+        margin-bottom: 1.15rem;
+        border-bottom: 1px solid var(--p-line);
     }}
     .dbv-topbar-left {{
         display: flex;
@@ -466,123 +520,176 @@ render_html(
     }}
     .dbv-topbar-left img {{
         display: block;
-        width: 28px;
+        width: 26px;
         height: auto;
     }}
     .dbv-topbar-title {{
-        font-weight: 800;
-        font-size: 1.05rem;
-        color: #0F172A;
+        font-weight: 600;
+        font-size: 1.02rem;
+        letter-spacing: -0.02em;
+        color: var(--p-ink);
     }}
     .dbv-topbar-badge {{
-        font-size: 0.76rem;
-        font-weight: 600;
-        color: #005C8A;
-        background: #E0F2FE;
-        padding: 3px 11px;
+        font-family: var(--font-sans);
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--p-muted);
+        background: var(--p-surface);
+        border: 1px solid var(--p-line);
+        padding: 3px 10px;
         border-radius: 999px;
     }}
 
-    /* Tela Inicial Minimalista Estilo Gemini (centralizada verticalmente) */
-    .gemini-welcome {{
-        text-align: center;
-        padding: 10vh 1rem 1.2rem 1rem;
+    /* Primeira Tela (Hero) Editorial — Uma seção na tela (1440x900), entrada suave única */
+    @keyframes maraHeroEnter {{
+        from {{ opacity: 0; transform: translateY(10px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
     }}
-    .gemini-welcome img {{
+    .gemini-welcome {{
+        text-align: left;
+        padding: clamp(2.5rem, 7vh, 4.75rem) 0 1.35rem 0;
+        animation: maraHeroEnter 620ms var(--ease-enter) both;
+    }}
+    .mara-hero-top {{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.1rem;
+        flex-wrap: wrap;
+    }}
+    .mara-hero-top img {{
         display: block;
-        width: 64px;
+        width: 44px;
         height: auto;
-        margin: 0 auto 0.9rem auto;
-        filter: drop-shadow(0 4px 10px rgba(0, 71, 171, 0.18));
+        flex-shrink: 0;
+    }}
+    .mara-eyebrow {{
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--p-action);
+        background: #EEF6F9;
+        border: 1px solid rgba(13, 106, 138, 0.18);
+        padding: 4px 12px;
+        border-radius: 999px;
     }}
     .gemini-greeting {{
-        font-size: 2.2rem;
-        font-weight: 800;
-        line-height: 1.25;
-        margin: 0 0 0.45rem 0;
-        background: linear-gradient(90deg, #0047AB 0%, #005C8A 55%, #D90416 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-size: clamp(1.75rem, 2.65vw, 2.35rem);
+        font-weight: 600;
+        line-height: 1.18;
+        letter-spacing: -0.03em;
+        color: var(--p-ink);
+        margin: 0 0 0.55rem 0;
+        max-width: 28ch;
     }}
-    .gemini-sub {{
-        font-size: 1.04rem;
-        color: #64748B;
-        margin: 0 auto;
-        max-width: 100%;
+    .gemini-greeting .mara-muted {{
+        color: var(--p-muted);
         font-weight: 400;
     }}
-
-    /* Chips de sugestão limpos estilo Gemini */
-    div.stMainBlockContainer .stButton > button {{
-        background: #FFFFFF !important;
-        color: #1E293B !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 14px !important;
-        font-weight: 500 !important;
-        font-size: 0.89rem !important;
-        padding: 0.65rem 1.05rem !important;
-        min-height: 3.3rem !important;
-        text-align: left !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-        transition: all 0.16s ease !important;
+    .gemini-sub {{
+        font-size: 1rem;
+        line-height: 1.55;
+        color: var(--p-muted);
+        margin: 0;
+        max-width: 62ch;
+        font-weight: 400;
     }}
-    div.stMainBlockContainer .stButton > button:hover {{
-        background: #F1F5F9 !important;
-        border-color: #0047AB !important;
-        color: #0047AB !important;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 10px rgba(0, 71, 171, 0.08) !important;
+    @media (prefers-reduced-motion: reduce) {{
+        .gemini-welcome {{ animation: none !important; }}
+    }}
+
+    /* Cards de sugestão e botões da área principal (Microinteração Taste Skill: -2px hover, .985 press, 44px+ tap) */
+    div.stMainBlockContainer .stButton > button {{
+        background: var(--p-bg) !important;
+        color: var(--p-ink) !important;
+        border: 1px solid var(--p-line) !important;
+        border-radius: var(--r-md) !important;
+        font-family: var(--font-sans) !important;
+        font-weight: 500 !important;
+        font-size: 0.9375rem !important;
+        line-height: 1.45 !important;
+        padding: 0.75rem 1.1rem !important;
+        min-height: 3.15rem !important;
+        text-align: left !important;
+        box-shadow: none !important;
+        transition: transform 180ms var(--ease), border-color 150ms var(--ease), background-color 150ms var(--ease), box-shadow 180ms var(--ease) !important;
+    }}
+    @media (hover: hover) and (pointer: fine) {{
+        div.stMainBlockContainer .stButton > button:hover {{
+            background: var(--p-surface-subtle) !important;
+            border-color: var(--p-action) !important;
+            color: var(--p-action) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(1, 4, 64, 0.06) !important;
+        }}
+    }}
+    div.stMainBlockContainer .stButton > button:active {{
+        transform: translateY(1px) scale(0.985) !important;
+        transition-duration: 90ms !important;
     }}
 
     /* Botões de Download PDF e ações dentro das mensagens do chat */
     div.stMainBlockContainer .stDownloadButton button {{
-        background: #FFFFFF !important;
-        color: #0F172A !important;
-        border: 1px solid #CBD5E1 !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        font-size: 0.82rem !important;
-        padding: 0.35rem 0.75rem !important;
-        min-height: 2.25rem !important;
+        background: var(--p-bg) !important;
+        color: var(--p-ink) !important;
+        border: 1px solid var(--p-line-strong) !important;
+        border-radius: var(--r-sm) !important;
+        font-family: var(--font-sans) !important;
+        font-weight: 500 !important;
+        font-size: 0.84rem !important;
+        padding: 0.4rem 0.85rem !important;
+        min-height: 2.5rem !important;
         text-align: center !important;
         justify-content: center !important;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
-        transition: all 0.15s ease !important;
+        box-shadow: none !important;
+        transition: transform 150ms var(--ease), border-color 150ms var(--ease), background-color 150ms var(--ease) !important;
     }}
-    div.stMainBlockContainer .stDownloadButton button:hover {{
-        background: #EFF6FF !important;
-        border-color: #0047AB !important;
-        color: #0047AB !important;
+    @media (hover: hover) and (pointer: fine) {{
+        div.stMainBlockContainer .stDownloadButton button:hover {{
+            background: #EEF6F9 !important;
+            border-color: var(--p-action) !important;
+            color: var(--p-action) !important;
+            transform: translateY(-1px);
+        }}
+    }}
+    div.stMainBlockContainer .stDownloadButton button:active {{
+        transform: translateY(1px) scale(0.985) !important;
     }}
     div[data-testid="stChatMessage"] .stButton button {{
-        min-height: 2.25rem !important;
-        padding: 0.3rem 0.6rem !important;
-        border-radius: 10px !important;
+        min-height: 2.5rem !important;
+        padding: 0.35rem 0.65rem !important;
+        border-radius: var(--r-sm) !important;
         text-align: center !important;
         justify-content: center !important;
     }}
 
-    /* Barra inferior do Chat (stBottom) 100% sólida e branca estilo Gemini */
+    /* Barra inferior do Chat (stBottom) 100% sólida e branca com hairline sutil */
     div[data-testid="stBottom"],
     div[data-testid="stBottom"] > div {{
-        background: #FFFFFF !important;
-        background-color: #FFFFFF !important;
+        background: var(--p-bg) !important;
+        background-color: var(--p-bg) !important;
     }}
     div[data-testid="stBottom"] {{
-        border-top: 1px solid #CBD5E1 !important;
-        box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.05) !important;
+        border-top: 1px solid var(--p-line) !important;
+        box-shadow: none !important;
     }}
     div[data-testid="stBottom"] > div {{
-        padding-top: 0.35rem !important;
-        padding-bottom: 1.25rem !important;
+        max-width: 960px !important;
+        margin: 0 auto !important;
+        padding-top: 0.55rem !important;
+        padding-bottom: 1.15rem !important;
+        padding-left: clamp(1.25rem, 3vw, 2.5rem) !important;
+        padding-right: clamp(1.25rem, 3vw, 2.5rem) !important;
     }}
 
     /* =========================================================================
-       COMPOSER INLINE ESTILO GEMINI (SELETOR DE MODO DENTRO DO INPUT, AO LADO DO ENVIAR)
+       COMPOSER INLINE (SELETOR DE MODO DENTRO DO INPUT, EQUAL EDGES COM A PÁGINA)
        ========================================================================= */
     [class*="st-key-chat_composer_wrapper"] {{
         position: relative !important;
-        max-width: 940px !important;
+        max-width: 100% !important;
         margin: 0 auto !important;
         display: block !important;
     }}
@@ -601,34 +708,34 @@ render_html(
 
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] > div,
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] [data-baseweb="base-input"] {{
-        background-color: #FFFFFF !important;
-        background: #FFFFFF !important;
-        border: 1.5px solid #94A3B8 !important;
-        border-radius: 24px !important;
-        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+        background-color: var(--p-bg) !important;
+        background: var(--p-bg) !important;
+        border: 1.5px solid var(--p-line-strong) !important;
+        border-radius: var(--r-lg) !important;
+        box-shadow: 0 2px 10px rgba(1, 4, 64, 0.04) !important;
         position: relative !important;
-        padding: 0.35rem 0.75rem !important;
+        padding: 0.4rem 0.85rem !important;
         padding-right: 92px !important;
-        min-height: 50px !important;
-        transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
+        min-height: 52px !important;
+        transition: border-color 150ms var(--ease), box-shadow 150ms var(--ease) !important;
     }}
 
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] > div:hover {{
-        border-color: #475569 !important;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.11) !important;
+        border-color: rgba(1, 4, 64, 0.38) !important;
     }}
 
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"]:focus-within > div {{
-        border-color: #0047AB !important;
-        box-shadow: 0 0 0 3px rgba(0, 71, 171, 0.2), 0 4px 20px rgba(0, 71, 171, 0.1) !important;
+        border-color: var(--p-action) !important;
+        box-shadow: 0 0 0 3px rgba(13, 106, 138, 0.16) !important;
     }}
 
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] textarea,
     [class*="st-key-chat_composer_wrapper"] textarea[data-testid="stChatInputTextArea"] {{
-        color: #0F172A !important;
-        font-size: 0.96rem !important;
-        line-height: 1.48 !important;
-        caret-color: #0047AB !important;
+        font-family: var(--font-sans) !important;
+        color: var(--p-ink) !important;
+        font-size: 1rem !important;
+        line-height: 1.5 !important;
+        caret-color: var(--p-action) !important;
         background: transparent !important;
         padding-right: 6px !important;
     }}
@@ -653,20 +760,20 @@ render_html(
         min-height: 35px !important;
         max-height: 35px !important;
         border-radius: 50% !important;
-        background-color: #0047AB !important;
+        background-color: var(--p-action) !important;
         color: #FFFFFF !important;
         border: none !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        box-shadow: 0 2px 6px rgba(0, 71, 171, 0.28) !important;
+        box-shadow: none !important;
         z-index: 5 !important;
         cursor: pointer !important;
         box-sizing: border-box !important;
         padding: 0 !important;
         margin: 0 !important;
         overflow: hidden !important;
-        transition: transform 0.15s ease, background-color 0.15s ease !important;
+        transition: transform 150ms var(--ease), background-color 150ms var(--ease) !important;
     }}
 
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] button svg,
@@ -679,8 +786,11 @@ render_html(
     }}
 
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] button:hover:not(:disabled) {{
-        background-color: #003380 !important;
-        transform: scale(1.06) !important;
+        background-color: var(--p-action-hover) !important;
+        transform: translateY(-1px) !important;
+    }}
+    [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] button:active:not(:disabled) {{
+        transform: translateY(1px) scale(0.97) !important;
     }}
 
     [class*="st-key-chat_composer_wrapper"] div[data-testid="stChatInput"] button:disabled {{
@@ -894,108 +1004,151 @@ render_html(
 render_html(
     """
     <style>
-    /* Cards da página Biblioteca */
+    /* Cards da página Biblioteca (Taste Skill: hairline 1px, sem faixa superior colorida genérica, 2 níveis no máx.) */
     .lib-card {
         background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-top: 3px solid #0047AB;
-        border-radius: 14px;
-        padding: 1.05rem 1.15rem 0.75rem 1.15rem;
-        margin-bottom: 0.5rem;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+        border: 1px solid rgba(1, 4, 64, 0.10);
+        border-radius: 20px;
+        padding: 1.2rem 1.3rem 1rem 1.3rem;
+        margin-bottom: 0.45rem;
+        box-shadow: none;
+        transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .lib-card:hover {
+        border-color: rgba(1, 4, 64, 0.22);
     }
     .lib-card-header {
         display: flex;
         align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 0.45rem;
+        gap: 14px;
+        margin-bottom: 0.25rem;
     }
     .lib-card-header img {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         object-fit: contain;
         flex-shrink: 0;
+        padding: 4px;
+        border-radius: 10px;
+        background: #F8FAFC;
+        border: 1px solid rgba(1, 4, 64, 0.06);
     }
     .lib-card-title {
-        font-weight: 800;
-        font-size: 1rem;
-        color: #0F172A;
-        line-height: 1.25;
-        margin-bottom: 0.2rem;
+        font-weight: 600;
+        font-size: 1.05rem;
+        letter-spacing: -0.018em;
+        color: #010440;
+        line-height: 1.3;
+        margin-bottom: 0.28rem;
     }
     .lib-card-sub {
-        font-size: 0.84rem;
-        color: #475569;
-        line-height: 1.38;
+        font-size: 0.92rem;
+        color: #4F6289;
+        line-height: 1.5;
     }
     .lib-badge {
         display: inline-block;
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: #0047AB;
-        background: #EFF6FF;
-        border: 1px solid #BFDBFE;
-        padding: 1px 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #0D6A8A;
+        background: #EEF6F9;
+        border: 1px solid rgba(13, 106, 138, 0.18);
+        padding: 2px 9px;
         border-radius: 999px;
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.35rem;
     }
 
-    /* Mensagens do Chat limpas e sólidas no fundo branco */
+    /* Mensagens do Chat com tipografia editorial (16px, line-height 1.65, tabelas limpas) */
     div[data-testid="stChatMessage"] {
         background-color: #FFFFFF !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 0.85rem 0.25rem !important;
-        margin-bottom: 0.85rem !important;
+        padding: 0.95rem 0.25rem !important;
+        margin-bottom: 0.95rem !important;
         opacity: 1 !important;
+    }
+    div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
+    div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li {
+        font-size: 1rem !important;
+        line-height: 1.65 !important;
+        color: #1E293B !important;
+    }
+    div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.85rem 0;
+        font-size: 0.92rem;
+    }
+    div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] th {
+        background: #F3F5F8;
+        color: #010440;
+        font-weight: 600;
+        text-align: left;
+        padding: 0.6rem 0.8rem;
+        border-bottom: 1px solid rgba(1, 4, 64, 0.16);
+    }
+    div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] td {
+        padding: 0.55rem 0.8rem;
+        border-bottom: 1px solid rgba(1, 4, 64, 0.08);
+        color: #1E293B;
+    }
+    div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] blockquote {
+        background: #F8FAFC;
+        border-left: 2px solid #D97706;
+        margin: 0.75rem 0;
+        padding: 0.6rem 1rem;
+        border-radius: 0 8px 8px 0;
+        color: #010440;
     }
 
     /* Balão destacado e sutil da pergunta do usuário */
     div[data-testid="stChatMessage"]:has(.dbv-user-marker),
     div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-        background-color: #F8FAFC !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 16px !important;
-        padding: 0.85rem 1.15rem !important;
+        background-color: #F4F6F9 !important;
+        border: 1px solid rgba(1, 4, 64, 0.09) !important;
+        border-radius: 18px 18px 4px 18px !important;
+        padding: 0.85rem 1.2rem !important;
         margin-left: auto !important;
-        max-width: 88% !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        max-width: 86% !important;
+        box-shadow: none !important;
     }
     .dbv-user-marker {
         display: none !important;
     }
 
-    /* Indicador fluido e minimalista de pensamento (estilo Gemini) */
-    @keyframes geminiPulse {
-        0%, 100% { opacity: 0.75; transform: scale(0.98); }
-        50% { opacity: 1; transform: scale(1.02); }
+    /* Indicador discreto de consulta em andamento */
+    @keyframes maraBreath {
+        0%, 100% { opacity: 0.72; }
+        50% { opacity: 1; }
     }
     .dbv-thinking-pill {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        background: #F0F7FF;
-        border: 1px solid #BAE6FD;
+        gap: 9px;
+        background: #F3F5F8;
+        border: 1px solid rgba(1, 4, 64, 0.10);
         border-radius: 999px;
         padding: 0.35rem 0.95rem;
         margin: 0.2rem 0 0.6rem 0;
-        font-size: 0.86rem;
-        color: #0369A1;
-        font-weight: 600;
-        animation: geminiPulse 1.8s ease-in-out infinite;
+        font-size: 0.85rem;
+        color: #010440;
+        font-weight: 500;
+        animation: maraBreath 1.8s ease-in-out infinite;
     }
     .dbv-thinking-sparkle {
-        font-size: 1rem;
-        color: #0284C7;
+        font-size: 0.9rem;
+        color: #0D6A8A;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .dbv-thinking-pill { animation: none !important; }
     }
 
-    /* Card de Fonte Consultada enxuto */
+    /* Card de Fonte Consultada enxuto e técnico (IBM Plex Mono para metadados) */
     .dbv-source-card {
         background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-left: 3px solid #0047AB;
-        border-radius: 8px;
-        padding: 0.65rem 0.9rem;
+        border: 1px solid rgba(1, 4, 64, 0.10);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
         margin-bottom: 0.5rem;
     }
     .dbv-source-header {
@@ -1004,37 +1157,38 @@ render_html(
         align-items: center;
         flex-wrap: wrap;
         gap: 6px;
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.35rem;
     }
-    .dbv-source-title { font-weight: 700; color: #0F172A; font-size: 0.88rem; }
+    .dbv-source-title { font-weight: 600; color: #010440; font-size: 0.88rem; }
     .dbv-page-badge {
-        background-color: #FEF9C3;
-        color: #854D0E;
-        font-weight: 700;
-        padding: 1px 8px;
-        border-radius: 999px;
-        font-size: 0.74rem;
+        font-family: var(--font-mono);
+        background-color: #F3F5F8;
+        color: #010440;
+        border: 1px solid rgba(1, 4, 64, 0.10);
+        font-weight: 500;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.73rem;
     }
     .dbv-cat-badge {
-        background-color: #E0F2FE;
-        color: #0369A1;
-        font-weight: 600;
-        padding: 1px 8px;
-        border-radius: 999px;
-        font-size: 0.74rem;
+        background-color: #EEF6F9;
+        color: #0D6A8A;
+        font-weight: 500;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.73rem;
     }
     .dbv-source-text {
-        color: #475569;
-        font-size: 0.84rem;
-        line-height: 1.45;
+        color: #4F6289;
+        font-size: 0.86rem;
+        line-height: 1.5;
         white-space: pre-wrap;
     }
 
     /* Painel Admin Clean */
     .dbv-admin-statusbar {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-left: 4px solid #0047AB;
+        background: #F8FAFC;
+        border: 1px solid rgba(1, 4, 64, 0.10);
         border-radius: 12px;
         padding: 0.85rem 1.15rem;
         margin-bottom: 1rem;
@@ -1045,20 +1199,40 @@ render_html(
         gap: 0.75rem;
     }
     .badge-status-ok {
-        background: #DCFCE7;
-        color: #166534;
+        background: #ECFDF5;
+        color: #065F46;
+        border: 1px solid rgba(6, 95, 70, 0.15);
         padding: 3px 10px;
         border-radius: 999px;
-        font-weight: 700;
+        font-weight: 500;
         font-size: 0.78rem;
     }
     .badge-status-off {
-        background: #FEE2E2;
+        background: #FEF2F2;
         color: #991B1B;
+        border: 1px solid rgba(153, 27, 27, 0.15);
         padding: 3px 10px;
         border-radius: 999px;
-        font-weight: 700;
+        font-weight: 500;
         font-size: 0.78rem;
+    }
+
+    /* Assinatura discreta Infinito Soft no rodapé do menu lateral */
+    .mara-infinito-sig {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 0.85rem;
+        padding-top: 0.65rem;
+        border-top: 1px solid rgba(1, 4, 64, 0.08);
+        font-size: 0.74rem;
+        color: #4F6289;
+        text-decoration: none;
+    }
+    .mara-infinito-sig img {
+        height: 14px;
+        width: auto;
+        opacity: 0.85;
     }
     </style>
     """
@@ -1214,19 +1388,23 @@ if "admin_autenticado" not in st.session_state:
 
 SUGESTOES_INICIAIS = [
     (
-        "👕 Posição dos emblemas no bolso",
+        "Consultar posição de insígnias no bolso (RUD)",
+        ":material/checkroom:",
         "Qual a posição correta dos emblemas e tiras nos bolsos do uniforme de gala segundo o RUD?",
     ),
     (
-        "🔵 Requisitos da Classe de Amigo",
+        "Ver requisitos da Classe de Amigo (10 anos)",
+        ":material/military_tech:",
         "Quais são os principais requisitos da Classe de Amigo (10 anos) e Amigo da Natureza?",
     ),
     (
-        "⛺ Sistema de Unidades no Clube",
+        "Revisar regras do Sistema de Unidades",
+        ":material/groups:",
         "Quantos desbravadores formam uma unidade e qual o papel do conselheiro e do capitão?",
     ),
     (
-        "🎯 Simulado rápido sobre os Ideais",
+        "Gerar simulado oficial sobre os Ideais DSA",
+        ":material/quiz:",
         "Gere um simulado com 3 questões sobre o Voto, a Lei, o Alvo e o Lema dos Desbravadores.",
     ),
 ]
@@ -1462,16 +1640,16 @@ with st.sidebar:
                 """
             )
 
-        if st.button("➕ Nova conversa", key="btn_nova_conversa", use_container_width=True):
+        if st.button("Nova conversa", icon=":material/add:", key="btn_nova_conversa", use_container_width=True):
             iniciar_nova_conversa(ir_para_chat=True)
             st.rerun()
 
         rotulo_btn_bib = (
-            "📚 Biblioteca (Ativa)"
+            "Biblioteca (Ativa)"
             if st.session_state.pagina_atual == "biblioteca"
-            else f"📚 Biblioteca ({len(CATALOGO_BIBLIOTECA)} guias)"
+            else f"Biblioteca ({len(CATALOGO_BIBLIOTECA)} guias)"
         )
-        if st.button(rotulo_btn_bib, key="btn_biblioteca", use_container_width=True):
+        if st.button(rotulo_btn_bib, icon=":material/menu_book:", key="btn_biblioteca", use_container_width=True):
             st.session_state.pagina_atual = "biblioteca"
             st.rerun()
 
@@ -1510,13 +1688,23 @@ with st.sidebar:
 
         st.divider()
         if st.session_state.pagina_atual != "admin":
-            if st.button("🔐 Painel da Diretoria", key="btn_admin", use_container_width=True):
+            if st.button("Painel da Diretoria", icon=":material/admin_panel_settings:", key="btn_admin", use_container_width=True):
                 st.session_state.pagina_atual = "admin"
                 st.rerun()
         else:
-            if st.button("💬 Voltar para a Mara", key="btn_voltar_mara", use_container_width=True):
+            if st.button("Voltar para o Chat", icon=":material/chat:", key="btn_voltar_mara", use_container_width=True):
                 st.session_state.pagina_atual = "chat"
                 st.rerun()
+
+        if URI_INFINITO:
+            render_html(
+                f"""
+                <a class="mara-infinito-sig" href="https://infinitosoft.com" target="_blank" rel="noopener noreferrer" title="Ecossistema Infinito Soft">
+                    <img src="{URI_INFINITO}" alt="Infinito Soft">
+                    <span>Infinito Soft · Ecossistema Oficial</span>
+                </a>
+                """
+            )
 
 
 # ==============================================================================
@@ -1838,7 +2026,7 @@ if st.session_state.pagina_atual == "biblioteca":
                 </div>
                 """
             )
-            with st.expander("📖 Ver resumo estruturado pronto", expanded=False):
+            with st.expander("Ler resumo estruturado e exportar apostila", icon=":material/menu_book:", expanded=False):
                 st.markdown(item.resumo_markdown)
                 pdf_guia_bytes = gerar_pdf_guia_biblioteca(
                     titulo=item.titulo,
@@ -1846,9 +2034,11 @@ if st.session_state.pagina_atual == "biblioteca":
                     badge=item.badge,
                     resumo_md=item.resumo_markdown,
                     nome_clube=cfg_env.nome_clube,
+                    logo_relativo=item.logo_relativo,
                 )
                 st.download_button(
-                    label="📄 Baixar Guia Rápido em PDF",
+                    label="Baixar Guia Rápido em PDF",
+                    icon=":material/download:",
                     data=pdf_guia_bytes,
                     file_name=f"guia_mara_{item.id}.pdf",
                     mime="application/pdf",
@@ -1858,7 +2048,8 @@ if st.session_state.pagina_atual == "biblioteca":
 
             b_chat, b_quiz = st.columns(2)
             if b_chat.button(
-                "💬 Perguntar à Mara",
+                "Consultar na Mara",
+                icon=":material/chat:",
                 key=f"lib_chat_{item.id}",
                 use_container_width=True,
             ):
@@ -1869,7 +2060,8 @@ if st.session_state.pagina_atual == "biblioteca":
                 st.rerun()
 
             if b_quiz.button(
-                "🎯 Gerar Simulado",
+                "Gerar Simulado",
+                icon=":material/quiz:",
                 key=f"lib_quiz_{item.id}",
                 use_container_width=True,
             ):
@@ -1914,24 +2106,40 @@ modo_quiz = st.session_state.modo_chat == "🎯 Simulado / Quiz"
 categoria_filtro = st.session_state.categoria_ativa
 pergunta_clicada: str | None = None
 
-# Se ainda não há mensagens, mostra a tela inicial E a barra de chat centralizadas (estilo Gemini)
+# Se ainda não há mensagens, mostra a Primeira Tela Editorial (Taste Skill: categoria + fato concreto + contraste, sem gradiente artificial)
 if not st.session_state.mensagens:
-    subtitulo_modo = (
-        "Modo Simulado ativo: digite um tema ou escolha um tópico abaixo para a Mara montar questões comentadas"
-        if modo_quiz
-        else f"Sua instrutora e IA de apoio aos manuais do Clube de Desbravadores · {html.escape(cfg_env.nome_clube)}"
-    )
+    qtd_manuais = len(manuais_cadastrados) or 4
+    fato_acervo = f"{qtd_manuais} manuais oficiais e {len(CATALOGO_BIBLIOTECA)} guias estruturados · {html.escape(cfg_env.nome_clube)}"
+    if modo_quiz:
+        h1_editorial = (
+            'Monte avaliações oficiais para sua unidade. '
+            '<span class="mara-muted">Questões comentadas com gabarito separado em PDF.</span>'
+        )
+        subtitulo_modo = (
+            "Informe o tema abaixo ou selecione um tópico rápido para gerar uma folha de prova pronta para impressão."
+        )
+    else:
+        h1_editorial = (
+            'Consulte os manuais oficiais dos Desbravadores. '
+            '<span class="mara-muted">Uniformes, classes, especialidades e liderança.</span>'
+        )
+        subtitulo_modo = (
+            "Respostas fundamentadas diretamente nos regulamentos da Divisão Sul-Americana, com exportação limpa para estudo em unidade."
+        )
     render_html(
         f"""
         <div class="gemini-welcome">
-            <img src="{URI_D1}" alt="Emblema D1 Desbravadores">
-            <div class="gemini-greeting">Maranata! Eu sou a Mara. Como posso ajudar?</div>
+            <div class="mara-hero-top">
+                <img src="{URI_D1}" alt="Emblema Oficial D1 do Clube de Desbravadores">
+                <span class="mara-eyebrow">{fato_acervo}</span>
+            </div>
+            <h1 class="gemini-greeting">{h1_editorial}</h1>
             <p class="gemini-sub">{subtitulo_modo}</p>
         </div>
         """
     )
 
-    # Barra de chat centralizada inline estilo Gemini com seletor de modo embutido
+    # Barra de chat inline com seletor de modo embutido (Equal Edges com Hero e Cards)
     entrada_chat = renderizar_composer_inline(
         key_sufixo="home",
         key_input="chat_input_principal_fixo",
@@ -1940,10 +2148,10 @@ if not st.session_state.mensagens:
 
     st.write("")
     c1, c2 = st.columns(2)
-    for idx, (rotulo_chip, pergunta_completa) in enumerate(SUGESTOES_INICIAIS):
+    for idx, (rotulo_chip, icone_chip, pergunta_completa) in enumerate(SUGESTOES_INICIAIS):
         col_alvo = c1 if idx % 2 == 0 else c2
-        if col_alvo.button(rotulo_chip, key=f"chip_{idx}", use_container_width=True):
-            if "Simulado" in rotulo_chip:
+        if col_alvo.button(rotulo_chip, icon=icone_chip, key=f"chip_{idx}", use_container_width=True):
+            if "simulado" in rotulo_chip.lower():
                 st.session_state.modo_chat = "🎯 Simulado / Quiz"
             pergunta_clicada = pergunta_completa
 
@@ -2006,12 +2214,13 @@ if col_top_pdf is not None:
             else f"conversa_mara_{st.session_state.conversa_id or 'atual'}.pdf"
         )
         st.download_button(
-            label="📄 Exportar PDF",
+            label="Exportar Caderno (PDF)",
+            icon=":material/download:",
             data=bytes_pdf_conv,
             file_name=nome_arq_conv,
             mime="application/pdf",
             key="btn_dl_conversa_completa_top",
-            help="Baixar toda a conversa ou simulado em PDF pronto para impressão",
+            help="Baixar toda a conversa ou simulado em PDF editorial pronto para impressão",
             use_container_width=True,
         )
 
@@ -2025,14 +2234,15 @@ for idx, msg in enumerate(st.session_state.mensagens):
         if msg.get("trechos"):
             renderizar_fontes(msg["trechos"], exibir_detalhes=cfg_env.exibir_detalhes_tecnicos)
         if msg["role"] == "assistant":
-            c_up, c_down, c_pdf, _ = st.columns([0.9, 0.9, 2.8, 7.4], vertical_alignment="center")
-            if c_up.button("👍", key=f"up_{idx}", help="Resposta útil"):
+            c_up, c_down, c_pdf, _ = st.columns([0.85, 0.85, 3.2, 7.1], vertical_alignment="center")
+            if c_up.button("", icon=":material/thumb_up:", key=f"up_{idx}", help="Resposta útil"):
                 repo.registrar_feedback(msg.get("pergunta", ""), msg["content"], True)
-                st.toast("Obrigado pelo feedback! 🔺")
-            if c_down.button("👎", key=f"down_{idx}", help="Resposta imprecisa"):
+                st.toast("Avaliação positiva registrada.")
+            if c_down.button("", icon=":material/thumb_down:", key=f"down_{idx}", help="Resposta imprecisa"):
                 repo.registrar_feedback(msg.get("pergunta", ""), msg["content"], False)
                 st.toast("Feedback registrado para revisão.")
-            eh_quiz_msg = modo_quiz or ("<details" in str(msg.get("content", "")).lower())
+            conteudo_str_lower = str(msg.get("content", "")).lower()
+            eh_quiz_msg = modo_quiz or ("<details" in conteudo_str_lower) or ("gabarito comentado" in conteudo_str_lower)
             bytes_pdf_msg = gerar_pdf_resposta(
                 pergunta=str(msg.get("pergunta", "")),
                 resposta_md=str(msg.get("content", "")),
@@ -2041,15 +2251,16 @@ for idx, msg in enumerate(st.session_state.mensagens):
                 categoria=categoria_filtro,
                 modo_quiz=eh_quiz_msg,
             )
-            rotulo_dl_msg = "📄 Baixar Prova (PDF)" if eh_quiz_msg else "📄 Baixar em PDF"
+            rotulo_dl_msg = "Baixar Prova + Gabarito (PDF)" if eh_quiz_msg else "Baixar Ficha em PDF"
             nome_arq_msg = f"simulado_mara_{idx + 1}.pdf" if eh_quiz_msg else f"estudo_mara_{idx + 1}.pdf"
             c_pdf.download_button(
                 label=rotulo_dl_msg,
+                icon=":material/download:",
                 data=bytes_pdf_msg,
                 file_name=nome_arq_msg,
                 mime="application/pdf",
                 key=f"dl_pdf_msg_{idx}",
-                help="Baixar esta resposta ou simulado em PDF formatado para impressão",
+                help="Baixar documento editorial em PDF pronto para impressão",
                 use_container_width=True,
             )
 

@@ -12,6 +12,7 @@ from pathlib import Path
 
 from dotenv import dotenv_values, load_dotenv, set_key
 from google import genai
+from google.genai import types
 
 RAIZ = Path(__file__).resolve().parents[2]
 ARQUIVO_ENV = RAIZ / ".env"
@@ -19,8 +20,9 @@ ARQUIVO_ENV = RAIZ / ".env"
 MODELOS_DISPONIVEIS = (
     "gemini-3.8-flash",
     "gemini-3.5-flash-lite",
-    "gemini-3.1-pro-preview",
     "gemini-3.1-flash-lite",
+    "gemini-3-flash-preview",
+    "gemini-3.1-pro-preview",
 )
 
 
@@ -43,11 +45,16 @@ def verificar_senha_admin(senha_informada: str, senha_esperada: str) -> bool:
 
 
 def criar_cliente_genai(cfg: "Config") -> genai.Client:
-    """Cria o cliente oficial google-genai para a Gemini Developer API (suporta chaves AIza... e AQ...)."""
+    """Cria o cliente oficial google-genai com timeout curto e sem retry-storm bloqueante,
+    permitindo failover rápido entre modelos em picos de demanda (503/504)."""
     chave = limpar_chave(cfg.gemini_api_key)
+    http_opts = types.HttpOptions(
+        timeout=18_000,
+        retry_options=types.HttpRetryOptions(attempts=1),
+    )
     if cfg.usa_vertex_express:
-        return genai.Client(vertexai=True, api_key=chave)
-    return genai.Client(api_key=chave)
+        return genai.Client(vertexai=True, api_key=chave, http_options=http_opts)
+    return genai.Client(api_key=chave, http_options=http_opts)
 
 
 def salvar_configuracoes_no_env(atualizacoes: dict[str, str]) -> None:
@@ -92,7 +99,7 @@ class Config:
     modelo_embedding: str = "gemini-embedding-001"
     dimensao: int = 768
     pasta_manuais: Path = RAIZ / "data" / "manuais"
-    top_k: int = 6
+    top_k: int = 8
     admin_password: str = "admin123"
     nome_clube: str = "Divisão Sul-Americana (DSA)"
     chat_ativo: bool = True
@@ -120,7 +127,7 @@ class Config:
             database_url=obter("DATABASE_URL", "").strip(),
             gemini_api_key=limpar_chave(obter("GEMINI_API_KEY", "")),
             modelo_chat=obter("MODELO_CHAT", "gemini-3.8-flash").strip() or "gemini-3.8-flash",
-            top_k=_to_int(obter("TOP_K", "6"), 6),
+            top_k=_to_int(obter("TOP_K", "8"), 8),
             admin_password=obter("ADMIN_PASSWORD", "admin123") or "admin123",
             nome_clube=obter("NOME_CLUBE", "Divisão Sul-Americana (DSA)").strip()
             or "Divisão Sul-Americana (DSA)",
