@@ -7,6 +7,8 @@ from __future__ import annotations
 import functools
 import io
 import json
+import logging
+import threading
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -31,6 +33,7 @@ from chatdbv.embeddings import Embedder
 from chatdbv.ingestao import (
     CATEGORIAS_VALIDAS,
     ROTULOS_CATEGORIAS,
+    calcular_sha256,
     ingerir_arquivo,
     ingerir_pasta,
 )
@@ -170,20 +173,41 @@ def criar_aplicacao(
     async def lifespan(app_inst: FastAPI):
         cfg_boot = app_inst.state.cfg_override or Config.carregar()
         repo_boot = app_inst.state.repo_override or criar_repositorio(cfg_boot)
+        app_inst.state.repo_singleton = repo_boot
         try:
             repo_boot.inicializar_esquema()
-            manuais = repo_boot.listar_manuais()
+            pasta_manuais = RAIZ / "data" / "manuais"
             if (
-                not manuais
-                and cfg_boot.gemini_api_key
+                cfg_boot.gemini_api_key
                 and app_inst.state.repo_override is None
-                and (RAIZ / "data" / "manuais").exists()
+                and pasta_manuais.exists()
             ):
-                emb = Embedder(cfg_boot)
-                ingerir_pasta(RAIZ / "data" / "manuais", repo_boot, emb)
+                arquivos_disco = [
+                    p
+                    for p in pasta_manuais.iterdir()
+                    if p.is_file() and p.suffix.lower() in (".pdf", ".md", ".txt")
+                ]
+                precisa_sincronizar = any(
+                    not repo_boot.manual_ja_indexado(p.name, calcular_sha256(p))
+                    for p in arquivos_disco
+                )
+                if precisa_sincronizar:
+                    def _sincronizar_acervo_bg() -> None:
+                        try:
+                            emb = Embedder(cfg_boot)
+                            ingerir_pasta(pasta_manuais, repo_boot, emb)
+                        except Exception as exc:
+                            logging.getLogger("mara_api").warning(
+                                "Falha na sincronização incremental em background: %s", exc
+                            )
+
+                    threading.Thread(
+                        target=_sincronizar_acervo_bg,
+                        name="mara-rag-sync",
+                        daemon=True,
+                    ).start()
         except Exception:
             pass
-        app_inst.state.repo_singleton = repo_boot
         yield
 
     app = FastAPI(
