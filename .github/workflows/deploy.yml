@@ -1,79 +1,66 @@
-name: CI/CD Mara — IA dos Desbravadores
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
+name: CD — Deploy Produção (Infinito Soft)
 
 on:
   push:
-    branches: [ main, develop, release, 'release/**' ]
-  pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  test:
-    name: 🧪 Testes Automatizados
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout do Código
-        uses: actions/checkout@v4
-
-      - name: Configurar Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Instalar Dependências
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Executar Suíte de Testes (API & Lógica)
-        run: |
-          pytest -v
-
   deploy:
-    name: 🚀 Deploy Automático na VPS (mara.infinitosoft.com)
-    needs: test
+    name: Deploy via SSH (Secrets Obrigatórios)
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    # Só executa no repositório oficial e quando iniciado por push direto na main ou disparo manual
+    if: github.event_name != 'pull_request' && github.repository_owner == 'edmiltonmartins'
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DEPLOY_ROOT: ${{ secrets.DEPLOY_ROOT }}
     steps:
-      - name: Checkout do Código
+      - name: Verificar segredos de deploy
+        run: |
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_KEY" ]; then
+            echo "Deploy ignorado: configure os secrets SSH_HOST, SSH_USER e SSH_PRIVATE_KEY no GitHub."
+            exit 0
+          fi
+
+      - name: Checkout do código
+        if: env.SSH_HOST != '' && env.SSH_KEY != ''
         uses: actions/checkout@v4
 
-      - name: Executar Deploy via SSH Nativo
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER || 'ubuntu' }}
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY || secrets.SSH_KEY || secrets.PRIVATE_KEY }}
+      - name: Publicar release na instância de produção
+        if: env.SSH_HOST != '' && env.SSH_KEY != ''
         run: |
-          if [ -z "$SSH_KEY" ]; then
-            echo "❌ Erro: O secret SSH_PRIVATE_KEY não foi configurado no GitHub!"
-            echo "Vá em Settings > Secrets and variables > Actions e adicione SSH_PRIVATE_KEY"
-            exit 1
-          fi
+          TARGET_USER="${SSH_USER:-ubuntu}"
+          TARGET_ROOT="${DEPLOY_ROOT:-/home/ubuntu/projetos-infinito}"
 
           mkdir -p ~/.ssh
           echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
 
-          echo "📦 Empacotando release da Mara (preservando .env e banco SQLite da VPS)..."
-          tar -czf /tmp/mara-release.tar.gz --exclude='.git' --exclude='data/*.sqlite' --exclude='.env' .
-          scp -i ~/.ssh/id_rsa /tmp/mara-release.tar.gz "$SSH_USER@$SSH_HOST:/tmp/mara-release.tar.gz"
+          tar -czf /tmp/mara-release.tar.gz \
+            --exclude='.git' \
+            --exclude='.venv' \
+            --exclude='data/*.sqlite' \
+            --exclude='data/*.sqlite-journal' \
+            --exclude='.env' \
+            --exclude='web/node_modules' \
+            --exclude='web/.next' \
+            --exclude='web/out' \
+            .
 
-          echo "🚀 Conectando em $SSH_USER@$SSH_HOST..."
-          ssh -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" << 'EOF'
+          scp -i ~/.ssh/id_rsa /tmp/mara-release.tar.gz "$TARGET_USER@$SSH_HOST:/tmp/mara-release.tar.gz"
+
+          ssh -i ~/.ssh/id_rsa "$TARGET_USER@$SSH_HOST" << EOF
             set -e
-            echo "--- Atualizando arquivos em /home/ubuntu/projetos-infinito/mara-dbv ---"
-            mkdir -p /home/ubuntu/projetos-infinito/mara-dbv
-            tar -xzf /tmp/mara-release.tar.gz -C /home/ubuntu/projetos-infinito/mara-dbv
+            mkdir -p "$TARGET_ROOT/mara-dbv"
+            tar -xzf /tmp/mara-release.tar.gz -C "$TARGET_ROOT/mara-dbv"
             rm -f /tmp/mara-release.tar.gz
-
-            echo "--- Atualizando container mara-app ---"
-            cd /home/ubuntu/projetos-infinito/deploy
+            cd "$TARGET_ROOT/deploy"
             sudo docker compose up -d --build mara-app
             sudo docker compose restart gateway
-
-            echo "--- Status dos serviços ---"
-            sudo docker ps
           EOF
-          echo "✅ Deploy concluído com sucesso!"

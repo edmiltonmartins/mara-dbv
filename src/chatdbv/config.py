@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Configuração central do Chat DBV, carregada de variáveis de ambiente / .env.
 
 Inclui autenticação administrativa (inspirada no projeto irmão infinito-games)

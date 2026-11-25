@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -292,7 +295,22 @@ export function SidebarRail({
               height={20}
               style={{ objectFit: "contain" }}
             />
-            <span>Infinito Soft · v2.0</span>
+            <span>Infinito Soft</span>
+          </a>
+
+          <a
+            href="https://github.com/edmiltonmartins/mara-dbv"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Código-fonte aberto sob licença GNU AGPLv3"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.68rem",
+              color: "var(--p-muted)",
+              textDecoration: "none",
+            }}
+          >
+            AGPLv3
           </a>
         </div>
       </aside>

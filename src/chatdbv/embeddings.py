@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Embeddings via Gemini (gemini-embedding-001, 768 dimensões) com suporte a
 Vertex AI Express Mode (chaves AQ...) e fallback vetorial local quando o endpoint
 de embeddings exigir projeto GCP."""

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Script de linha de comando para indexar manuais da pasta data/manuais/."""
 from __future__ import annotations
 

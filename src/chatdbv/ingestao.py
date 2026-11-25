@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Pipeline de ingestão de documentos (PDF, Markdown, TXT) com suporte a
 precedência normativa de OMDs (Orientações do Ministério de Desbravadores) e Camporis."""
 from __future__ import annotations

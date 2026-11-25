@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Extrai os requisitos oficiais integrais (item por item, incluindo gemas bíblicas)
 das 8 páginas oficiais de Classes Regulares, Avançadas, Agrupadas e de Liderança da DSA,
 baixa eventuais PDFs vinculados e remove duplicatas em data/manuais/."""

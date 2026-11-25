@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Inspeciona e coleta os PDFs e requisitos oficiais de Classes, Liderança,
 Notas Explicativas do RUD e OMDs 020/021 diretamente das páginas oficiais da DSA."""
 from __future__ import annotations

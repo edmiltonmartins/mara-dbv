@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 import type { BibliotecaPayload, ConversaDetalhe, ConversaResumo, HealthMetadata } from "./types";
 
 const KEY_DEVICE_ID = "mara_v2_device_id";

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Coletor oficial de documentos públicos da Divisão Sul-Americana (DSA)
 para enriquecimento da base RAG da Mara v2.0.
 

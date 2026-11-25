@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Orquestrador RAG do Chat DBV compatível tanto com Gemini Developer API (AIza...)
 quanto com Google Cloud Vertex AI Express Mode (chaves AQ...)."""
 from __future__ import annotations

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Catálogo estruturado da Biblioteca do Chat DBV (Conteúdos Pré-Feitos por Categoria).
 
 Permite que desbravadores, conselheiros e instrutores consultem guias rápidos já estruturados,

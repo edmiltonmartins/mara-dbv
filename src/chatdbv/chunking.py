@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Extração estruturada de texto (PyMuPDF + fallback pypdf) e divisão em chunks.
 
 Regra de projeto: um chunk NUNCA atravessa páginas. Assim a citação de página

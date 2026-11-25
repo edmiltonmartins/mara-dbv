@@ -1,7 +1,12 @@
 {
   "name": "mara-dbv-web",
   "version": "2.0.0",
-  "private": true,
+  "license": "AGPL-3.0-only",
+  "author": "Edmilton Cabral Martins Junior <junior.edmilton@gmail.com> (https://infinitosoft.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edmiltonmartins/mara-dbv.git"
+  },
   "description": "Mara — IA dos Desbravadores (App Web, PWA Offline & Capacitor · Infinito Soft)",
   "scripts": {
     "dev": "next dev --port 3000",

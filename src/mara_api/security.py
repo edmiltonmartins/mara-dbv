@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Segurança da API Mara v2.0: Rate Limiting por sessão/IP e Autenticação Admin HMAC."""
 from __future__ import annotations
 

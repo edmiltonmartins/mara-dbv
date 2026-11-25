@@ -1,3 +1,6 @@
+-- SPDX-License-Identifier: AGPL-3.0-only
+-- Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 -- Chat DBV - esquema inicial (PoC). Idêntico ao que o backend Java/Spring AI usará depois.
 -- Dimensão 768 = gemini-embedding-001 com output_dimensionality=768 (vetores normalizados).
 

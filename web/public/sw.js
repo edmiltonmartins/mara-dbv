@@ -1,5 +1,8 @@
-const CACHE_SHELL = "mara-shell-v3";
-const CACHE_ASSETS = "mara-assets-v3";
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
+const CACHE_SHELL = "mara-shell-v4";
+const CACHE_ASSETS = "mara-assets-v4";
 
 const PRECACHE_URLS = [
   "/",

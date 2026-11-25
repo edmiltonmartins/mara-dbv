@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Edmilton Cabral Martins Junior <junior.edmilton@gmail.com>
+
 """Aplicação Principal FastAPI + SSE + Static PWA da Mara v2.0."""
 from __future__ import annotations
 
